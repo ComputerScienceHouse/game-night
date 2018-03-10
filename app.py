@@ -20,7 +20,7 @@ def get_games():
         pass
     try:
         players = int(request.args.get('players'))
-        filters['$where'] = '{0} >= this.min_players && {0} <= this.max_players'.format(players)
+        filters['$and'] = [{'min_players': {'$lte': players}}, {'max_players': {'$gte': players}}]
     except:
         pass
     return games.find(filters, {'_id': False}).sort([('sortName', 1)])
