@@ -8,11 +8,15 @@ app.url_map.strict_slashes = False
 
 games = MongoClient().game_night.games
 
-@app.route('/api', methods = ['GET'])
+@app.route('/api')
 def all():
     return jsonify(get_games())
 
-def get_games():
+@app.route('/api/count')
+def count():
+    return jsonify(get_games(True))
+
+def get_games(count = False):
     filters = {}
     try:
         filters['name'] = compile(request.args['name'], IGNORECASE)
@@ -23,12 +27,14 @@ def get_games():
         filters['$and'] = [{'min_players': {'$lte': players}}, {'max_players': {'$gte': players}}]
     except:
         pass
+    if count:
+        return games.count(filters)
     return list(games.find(filters, {'_id': False}).sort([('sortName', 1)]))
 
-@app.route('/', methods = ['GET'])
+@app.route('/')
 def index():
     return render_template('index.html', games = get_games())
 
-@app.route('/api/random', methods = ['GET'])
+@app.route('/api/random')
 def random():
     return jsonify(choice(get_games()))
