@@ -1,4 +1,19 @@
 .col-12 {
-	margin-bottom: 15px;
-	margin-top: 15px;
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+
+.card {
+    overflow: hidden;
+}
+
+.card-img-top {
+    height: 175px;
+    object-fit: cover;
+    object-position: 50% top;
+    transition: filter 0.2s;
+}
+
+.card-img-top:hover {
+    filter: blur(2px);
 }

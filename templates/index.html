@@ -20,9 +20,9 @@
                 {% for game in row %}
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{game.name}}</h5>
-                        </div>
+                        <a href="{{game.link}}">
+                            <img alt="{{game.name}}" class="card-img-top" src="static/images/{{game.name}}.jpg" title="{{game.name}}">
+                        </a>
                         <div class="card-footer">
                             <small>Players: {{game.min_players|int}} - {{game.max_players|int}}</small>
                         </div>
