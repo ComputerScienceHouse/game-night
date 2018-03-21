@@ -11,7 +11,7 @@
             <div class="container">
                 <a class="navbar-brand" href="/">Game Night</a>
                 <form class="form-inline">
-                    <input autofocus class="form-control" name="name" placeholder="Search" type="text" value="{{request.args.get('name', '')}}">
+                    <input autofocus class="form-control" name="name" placeholder="Search" type="text" value="{{request.args['name']}}">
                 </form>
             </div>
         </div>
@@ -25,11 +25,15 @@
                             <img alt="{{game.name}}" class="card-img-top" src="static/images/{{game.name}}.jpg" title="{{game.name}}">
                         </a>
                         <div class="card-footer">
-                            <small>Players: {{game.min_players|int}} - {{game.max_players|int}}</small>
+                            <small>Players: {{game.min_players}} - {{game.max_players}}</small>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
+            </div>
+            {% else %}
+            <div class="jumbotron">
+                <h4>No results found.</h4>
             </div>
             {% endfor %}
         </div>
