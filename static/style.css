@@ -1,8 +1,3 @@
-.col-12 {
-    margin-bottom: 15px;
-    margin-top: 15px;
-}
-
 .card {
     overflow: hidden;
 }
@@ -16,4 +11,10 @@
 
 .card-img-top:hover {
     filter: blur(2px);
+}
+
+.dropdown-menu {
+    left: auto;
+    min-width: 15rem;
+    right: 0;
 }
