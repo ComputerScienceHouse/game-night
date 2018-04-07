@@ -1,8 +1,7 @@
 from flask import Flask, jsonify, render_template, request
 from os import environ
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
-from game_night.db import get_count, get_games, get_players
-from random import choice
+from game_night.db import get_count, get_games, get_players, get_random_game
 
 app = Flask(__name__)
 config = {
@@ -24,7 +23,7 @@ auth = OIDCAuthentication(app, client_registration_info = client_info, issuer = 
 @app.route('/api')
 @auth.oidc_auth
 def api():
-    return jsonify(get_games(request))
+    return jsonify(list(get_games(request)))
 
 @app.route('/api/count')
 @auth.oidc_auth
@@ -34,7 +33,7 @@ def api_count():
 @app.route('/api/random')
 @auth.oidc_auth
 def api_random():
-    return jsonify(choice(get_games(request)))
+    return jsonify(get_random_game(request))
 
 @app.route('/')
 @auth.oidc_auth
@@ -44,4 +43,4 @@ def index():
 @app.route('/random')
 @auth.oidc_auth
 def random():
-    return render_template('index.html', games = [choice(get_games(request))], players = get_players())
+    return render_template('index.html', games = [get_random_game(request)], players = get_players())

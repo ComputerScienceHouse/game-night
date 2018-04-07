@@ -20,7 +20,10 @@ def get_count(request):
     return games.count(create_filters(request))
 
 def get_games(request):
-    return list(games.find(create_filters(request), {'_id': False}).sort([('sortName', 1)]))
+    return games.find(create_filters(request), {'_id': False}).sort([('sort_name', 1)])
 
 def get_players():
-    return list(games.aggregate([{'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}]))[0]
+    return games.aggregate([{'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}]).next()
+
+def get_random_game(request):
+    return games.aggregate([{'$match': create_filters(request)}, {'$sample': {'size': 1}}, {'$project': {'_id': False}}]).next()

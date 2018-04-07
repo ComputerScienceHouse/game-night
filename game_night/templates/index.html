@@ -4,21 +4,21 @@
         <link href="https://s3.csh.rit.edu/csh-material-bootstrap/4.0.0/dist/csh-material-bootstrap.min.css" rel="stylesheet">
         <link href="static/style.css" rel="stylesheet">
         <meta content="initial-scale=1, width=device-width" name="viewport">
-        <script defer src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-        <script defer src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-        <script defer src="static/script.js"></script>        
+        <script crossorigin="anonymous" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+        <script crossorigin="anonymous" defer integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script crossorigin="anonymous" defer integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        <script defer src="static/script.js"></script>
         <title>CSH Game Night</title>
     </head>
     <body>
-        <div class="bg-primary navbar navbar-dark navbar-expand-lg sticky-top">
+        <nav class="bg-primary navbar navbar-dark navbar-expand-lg sticky-top">
             <div class="container">
                 <a class="navbar-brand" href="/">Game Night</a>
                 <form action="/" class="form-inline">
                     <div class="input-group">
                         <input autofocus class="form-control" name="name" placeholder="Search" type="text" value="{{request.args['name']}}">
                         <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" type="button"></button>
+                            <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" type="button"></button>
                             <div class="dropdown-menu px-2">
                                 <div class="form-group">
                                     <label class="mx-auto"># of players:</label>
@@ -38,25 +38,25 @@
                     </div>
                 </form>
             </div>
-        </div>
-        <div class="container" style="margin-top: 2em;">
+        </nav>
+        <div class="container">
             {% for row in games|batch(4) %}
             <div class="row">
                 {% for game in row %}
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 my-3">
+                <div class="col-12 col-lg-3 col-md-4 col-sm-6 my-3">
                     <div class="card">
                         <a href="{{game.link}}">
                             <img alt="{{game.name}}" class="card-img-top" src="static/images/{{game.name}}.jpg" title="{{game.name}}">
                         </a>
                         <div class="card-footer">
-                            <small>Players: {{game.min_players}} - {{game.max_players}}</small>
+                            <p class="card-text">Players: {{game.min_players}} - {{game.max_players}}</p>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="jumbotron">
+            <div class="jumbotron mt-3">
                 <h4>No results found.</h4>
             </div>
             {% endfor %}
