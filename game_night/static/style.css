@@ -16,5 +16,6 @@
 .dropdown-menu {
     left: auto;
     min-width: 15rem;
+    position: absolute;
     right: 0;
 }

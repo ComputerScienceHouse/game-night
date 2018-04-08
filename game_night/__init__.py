@@ -1,7 +1,7 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template
 from os import environ
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
-from game_night.db import get_count, get_games, get_players, get_random_game
+from game_night.db import get_count, get_games, get_players, get_random_game, get_submissions, is_gamemaster
 
 app = Flask(__name__)
 config = {
@@ -23,24 +23,31 @@ auth = OIDCAuthentication(app, client_registration_info = client_info, issuer = 
 @app.route('/api')
 @auth.oidc_auth
 def api():
-    return jsonify(list(get_games(request)))
+    return jsonify(list(get_games()))
 
 @app.route('/api/count')
 @auth.oidc_auth
 def api_count():
-    return jsonify(get_count(request))
+    return jsonify(get_count())
 
 @app.route('/api/random')
 @auth.oidc_auth
 def api_random():
-    return jsonify(get_random_game(request))
+    return jsonify(get_random_game())
 
 @app.route('/')
 @auth.oidc_auth
 def index():
-    return render_template('index.html', games = get_games(request), players = get_players())
+    return render_template('index.html', gamemaster = is_gamemaster(), games = get_games(), players = get_players())
 
 @app.route('/random')
 @auth.oidc_auth
 def random():
-    return render_template('index.html', games = [get_random_game(request)], players = get_players())
+    game = get_random_game()
+    return render_template('index.html', gamemaster = is_gamemaster(), games = [] if game is None else [game], players = get_players())
+
+@app.route('/submissions')
+@auth.oidc_auth
+def submissions():
+    gamemaster = is_gamemaster()
+    return render_template('submissions.html', gamemaster = gamemaster, games = get_submissions(gamemaster))
