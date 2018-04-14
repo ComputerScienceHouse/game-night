@@ -38,16 +38,16 @@ def api_random():
 @app.route('/')
 @auth.oidc_auth
 def index():
-    return render_template('index.html', gamemaster = is_gamemaster(), games = get_games(), players = get_players())
+    return render_template('index.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], gamemaster = is_gamemaster(), games = get_games(), players = get_players())
 
 @app.route('/random')
 @auth.oidc_auth
 def random():
     game = get_random_game()
-    return render_template('index.html', gamemaster = is_gamemaster(), games = [] if game is None else [game], players = get_players())
+    return render_template('index.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], gamemaster = is_gamemaster(), games = [] if game is None else [game], players = get_players())
 
 @app.route('/submissions')
 @auth.oidc_auth
 def submissions():
     gamemaster = is_gamemaster()
-    return render_template('submissions.html', gamemaster = gamemaster, games = get_submissions(gamemaster))
+    return render_template('submissions.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], gamemaster = gamemaster, games = get_submissions(gamemaster))
