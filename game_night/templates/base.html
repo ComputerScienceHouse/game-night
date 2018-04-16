@@ -37,7 +37,12 @@
                             <img alt="{{game.name}}" class="card-img-top" src="https://s3.amazonaws.com/{{bucket}}/{{game.name}}.jpg" title="{{game.name}}">
                         </a>
                         <div class="card-body">
-                            <h4 class="card-title"><a href="{{game.link}}">{{game.name}}</a></h4>
+                            <h4 class="card-title">
+                                <a href="{{game.link}}">{{game.name}}</a>
+                                {% if game.new %}
+                                <span class="badge badge-success">New</span>
+                                {% endif %}
+                            </h4>
                             <p class="card-text">Players: {{game.min_players}} - {{game.max_players}}</p>
                         </div>
                         <div class="card-footer">
