@@ -30,7 +30,10 @@ def get_players():
     return games.aggregate([{'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}]).next()
 
 def get_random_game():
-    return games.aggregate([{'$match': create_filters()}, {'$sample': {'size': 1}}, {'$project': {'_id': False}}]).next()
+    try:
+        return games.aggregate([{'$match': create_filters()}, {'$sample': {'size': 1}}, {'$project': {'_id': False}}]).next()
+    except:
+        return None
 
 def get_submissions(gamemaster = False):
     return submissions.find() if gamemaster else submissions.find({'username': session['userinfo']['preferred_username']})
