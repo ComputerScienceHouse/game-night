@@ -43,7 +43,11 @@
                                 <span class="badge badge-success">New</span>
                                 {% endif %}
                             </h4>
+                            {% if game.max_players == game.min_players %}
+                            <p class="card-text">Players: {{game.max_players}}</p>
+                            {% else %}
                             <p class="card-text">Players: {{game.min_players}} - {{game.max_players}}</p>
+                            {% endif %}
                         </div>
                         <div class="card-footer">
                             {% if game.owner %}
