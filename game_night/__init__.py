@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, render_template
 from os import environ
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
-from game_night.db import get_count, get_games, get_players, get_random_game, get_submissions, is_gamemaster
+from game_night.db import get_count, get_games, get_owners, get_players, get_random_game, get_submissions, is_gamemaster
 
 app = Flask(__name__)
 config = {
@@ -29,6 +29,11 @@ def api():
 @auth.oidc_auth
 def api_count():
     return jsonify(get_count())
+
+@app.route('/api/owners')
+@auth.oidc_auth
+def api_owners():
+    return jsonify(get_owners())
 
 @app.route('/api/random')
 @auth.oidc_auth

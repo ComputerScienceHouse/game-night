@@ -26,6 +26,11 @@ def get_count():
 def get_games():
     return games.find(create_filters(), {'_id': False}).sort([('sort_name', 1)])
 
+def get_owners():
+    owners = games.distinct('owner', create_filters())
+    owners.sort()
+    return owners
+
 def get_players():
     return games.aggregate([{'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}]).next()
 
