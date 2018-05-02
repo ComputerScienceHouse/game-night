@@ -34,9 +34,10 @@ def get_owners():
 def get_players():
     return games.aggregate([{'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}]).next()
 
-def get_random_game():
+def get_random_games(sample_size):
+    sample = games.aggregate([{'$match': create_filters()}, {'$sample': {'size': sample_size}}, {'$project': {'_id': False}}])
     try:
-        return games.aggregate([{'$match': create_filters()}, {'$sample': {'size': 1}}, {'$project': {'_id': False}}]).next()
+        return sample.next() if sample_size == 1 else sample
     except:
         return None
 

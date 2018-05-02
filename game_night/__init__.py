@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, render_template
 from os import environ
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
-from game_night.db import get_count, get_games, get_owners, get_players, get_random_game, get_submissions, is_gamemaster
+from game_night.db import get_count, get_games, get_owners, get_players, get_random_games, get_submissions, is_gamemaster
 
 app = Flask(__name__)
 config = {
@@ -35,10 +35,12 @@ def api_count():
 def api_owners():
     return jsonify(get_owners())
 
-@app.route('/api/random')
+@app.route('/api/random', defaults = {'sample_size': 1})
+@app.route('/api/random/<int:sample_size>')
 @auth.oidc_auth
-def api_random():
-    return jsonify(get_random_game())
+def api_random(sample_size):
+    sample = get_random_games(sample_size)
+    return jsonify(sample if sample_size == 1 else list(sample))
 
 @app.route('/')
 @auth.oidc_auth
@@ -48,7 +50,7 @@ def index():
 @app.route('/random')
 @auth.oidc_auth
 def random():
-    game = get_random_game()
+    game = get_random_games(1)
     return render_template('index.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], gamemaster = is_gamemaster(), games = [] if game is None else [game], players = get_players())
 
 @app.route('/submissions')
