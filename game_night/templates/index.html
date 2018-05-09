@@ -1,29 +1,5 @@
-{% extends 'base.html' %}
-{% block search %}
-<form action="/" class="ml-auto">
-    <div class="input-group">
-        <input autofocus class="form-control" name="name" placeholder="Search" type="text" value="{{request.args['name']}}">
-        <div class="dropdown input-group-append">
-            <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" type="button"></button>
-            <div class="dropdown-menu form-inline px-2">
-                <div class="form-group">
-                    <label class="mx-auto"># of players:</label>
-                    <select class="form-control mx-auto" name="players" id="players">
-                        <option value="">Any</option>
-                        {% for i in range(players.min, players.max + 1) %}
-                        <option{% if request.args.get('players', '0') == i|string %} selected{% endif %} value="{{i}}">{{i}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="btn-toolbar mt-2">
-                    <button class="btn btn-primary btn-sm mx-auto" type="submit">Search</button>
-                    <button class="btn btn-primary btn-sm mx-auto" formaction="/random" type="submit">Random</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-{% endblock %}
+{% extends 'base_games.html' %}
+
 {% block no_games %}
 <h4>No results found.</h4>
 {% endblock %}

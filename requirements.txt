@@ -1,3 +1,4 @@
 flask
+flask-markdown
 flask-pyoidc
 pymongo

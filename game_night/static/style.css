@@ -19,3 +19,12 @@
     position: absolute;
     right: 0;
 }
+
+@media (min-width: 576px) {
+
+    .card-img-top-large {
+        height: auto;
+        max-height: 350px;
+    }
+
+}

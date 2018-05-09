@@ -2,12 +2,12 @@
 <html>
     <head>
         <link href="https://themeswitcher.csh.rit.edu/api/get" rel="stylesheet">
-        <link href="static/style.css" rel="stylesheet">
+        <link href="/static/style.css" rel="stylesheet">
         <meta content="initial-scale=1, width=device-width" name="viewport">
         <script crossorigin="anonymous" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
         <script crossorigin="anonymous" defer integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
         <script crossorigin="anonymous" defer integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-        <script defer src="static/script.js"></script>
+        <script defer src="/static/script.js"></script>
         <title>CSH Game Night</title>
     </head>
     <body>
@@ -22,50 +22,35 @@
                             <a class="nav-link" href="/submissions">Submissions</a>
                         </li>
                     </ul>
-                    {% block search %}
-                    {% endblock %}
+                    <form action="/" class="ml-auto">
+                        <div class="input-group">
+                            <input autofocus class="form-control" name="name" placeholder="Search" type="text" value="{{request.args['name']}}">
+                            <div class="dropdown input-group-append">
+                                <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" type="button"></button>
+                                <div class="dropdown-menu form-inline px-2">
+                                    <div class="form-group">
+                                        <label class="mx-auto"># of players:</label>
+                                        <select class="form-control mx-auto" name="players" id="players">
+                                            <option value="">Any</option>
+                                            {% for i in range(players.min, players.max + 1) %}
+                                            <option{% if request.args.get('players', '0') == i|string %} selected{% endif %} value="{{i}}">{{i}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="btn-toolbar mt-2">
+                                        <button class="btn btn-primary btn-sm mx-auto" type="submit">Search</button>
+                                        <button class="btn btn-primary btn-sm mx-auto" formaction="/random" type="submit">Random</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </nav>
         <div class="container">
-            {% for row in games|batch(4) %}
-            <div class="row">
-                {% for game in row %}
-                <div class="col-12 col-lg-3 col-md-6 col-sm-6 my-3">
-                    <div class="card">
-                        <a href="{{game.link}}">
-                            <img alt="{{game.name}}" class="card-img-top" src="https://s3.amazonaws.com/{{bucket}}/{{game.name}}.jpg" title="{{game.name}}">
-                        </a>
-                        <div class="card-body">
-                            <h4 class="card-title">
-                                <a href="{{game.link}}">{{game.name}}</a>
-                                {% if game.new %}
-                                <span class="badge badge-success">New</span>
-                                {% endif %}
-                            </h4>
-                            {% if game.max_players == game.min_players %}
-                            <p class="card-text">Players: {{game.max_players}}</p>
-                            {% else %}
-                            <p class="card-text">Players: {{game.min_players}} - {{game.max_players}}</p>
-                            {% endif %}
-                        </div>
-                        <div class="card-footer">
-                            {% if game.owner %}
-                            <p class="card-text">Owner: <a href="https://profiles.csh.rit.edu/user/{{game.owner}}">{{game.owner}}</a></p>
-                            {% else %}
-                            <p class="card-text">Owner: CSH</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="jumbotron mt-3">
-                {% block no_games %}
-                {% endblock %}
-            </div>
-            {% endfor %}
+            {% block content %}
+            {% endblock %}
         </div>
     </body>
 </html>
