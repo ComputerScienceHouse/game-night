@@ -1,11 +1,15 @@
 from pymongo import MongoClient
-from re import compile, IGNORECASE
+from boto3 import client
+from os import environ
+from re import compile, IGNORECASE, sub
 from flask import abort, request, session
+from game_night.game import Game
 
 _game_night = MongoClient().game_night
 _gamemasters = _game_night.gamemasters
 _games = _game_night.games
 _submissions = _game_night.submissions
+_s3 = client('s3', aws_access_key_id = environ['GAME_NIGHT_S3_KEY'], aws_secret_access_key= environ['GAME_NIGHT_S3_SECRET'])
 
 def _create_filters():
     filters = {}
@@ -49,3 +53,22 @@ def get_submissions(gamemaster = False):
 
 def is_gamemaster():
     return _gamemasters.count({'username': session['userinfo']['preferred_username']})
+
+def submit_game():
+    game = Game()
+    if game.validate():
+        game = game.data
+        _s3.upload_fileobj(game['image'], environ['GAME_NIGHT_S3_BUCKET'], game['name'] + '.jpg')
+        del game['image']
+        if game['owner'] == 'CSH':
+            del game['owner']
+        game['sort_name'] = sub('A|(An)|(The) ', '', game['name'])
+        _games.replace_one({'name': game['name']}, game, True)
+        _update_new_games()
+        return True
+    return False
+
+def _update_new_games():
+    _games.update_many({'new': True}, {'$unset': {'new': 1}})
+    for game in _games.find().sort([('_id', -1)]).limit(10):
+        _games.update_one({'name': game['name']}, {'$set': {'new': True}})

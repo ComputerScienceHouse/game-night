@@ -1,4 +1,6 @@
+boto3
 flask
 flask-markdown
 flask-pyoidc
+flask-wtf
 pymongo
