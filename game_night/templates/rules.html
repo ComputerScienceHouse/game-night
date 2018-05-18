@@ -12,12 +12,12 @@
                     <a href="{{game.link}}">{{game.name}}</a> House Rules
                 </h1>
                 <hr>
-                {{rules.markdown|markdown}}
+                {{game.rules.markdown|markdown}}
             </div>
             <div class="card-footer">
                 <ul class="card-text list-inline navbar-user">
                     <li class="list-inline-item">Contributors: </li>
-                    {% for contributor in rules.contributors %}
+                    {% for contributor in game.rules.contributors %}
                     <li class="list-inline-item">
                         <a href="https://profiles.csh.rit.edu/user/{{contributor}}">
                             <img alt="{{contributor}}" src="https://profiles.csh.rit.edu/image/{{contributor}}" title="{{contributor}}">
