@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from boto3 import client
 from os import environ
-from re import compile, IGNORECASE, sub
+from re import compile, error, escape, IGNORECASE, sub
 from flask import abort, request, session
 from uuid import uuid4
 from functools import wraps
@@ -19,6 +19,8 @@ def _create_filters():
     filters = {}
     try:
         filters['name'] = compile(request.args['name'], IGNORECASE)
+    except error:
+        filters['name'] = compile(escape(request.args['name']), IGNORECASE)
     except:
         pass
     try:
