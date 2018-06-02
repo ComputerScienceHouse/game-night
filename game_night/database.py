@@ -13,7 +13,7 @@ _gamemasters = _game_night.gamemasters
 _games = _game_night.games
 _submissions = _game_night.submissions
 
-_s3 = client('s3', aws_access_key_id = environ['GAME_NIGHT_S3_KEY'], aws_secret_access_key= environ['GAME_NIGHT_S3_SECRET'])
+_s3 = client('s3', aws_access_key_id = environ['GAME_NIGHT_S3_KEY'], aws_secret_access_key = environ['GAME_NIGHT_S3_SECRET'])
 
 def _create_filters():
     filters = {}
@@ -23,6 +23,9 @@ def _create_filters():
         filters['name'] = compile(escape(request.args['name']), IGNORECASE)
     except:
         pass
+    owner = request.args.get('owner')
+    if owner:
+        filters['owner'] = owner
     try:
         players = int(request.args['players'])
         filters['$and'] = [{'min_players': {'$lte': players}}, {'max_players': {'$gte': players}}]

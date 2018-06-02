@@ -5,24 +5,24 @@ from flask_pyoidc.flask_pyoidc import OIDCAuthentication
 from game_night.database import *
 
 app = Flask(__name__)
-config = {
+_config = {
     'PREFERRED_URL_SCHEME': environ.get('GAME_NIGHT_URL_SCHEME', 'https'),
     'SECRET_KEY': environ['GAME_NIGHT_SECRET_KEY'],
     'SERVER_NAME': environ['GAME_NIGHT_SERVER_NAME'],
     'WTF_CSRF_ENABLED': False
 }
-app.config.update(config)
+app.config.update(_config)
 app.jinja_env.lstrip_blocks = True
 app.jinja_env.trim_blocks = True
 app.url_map.strict_slashes = False
 
 Markdown(app)
 
-client_info = {
+_client_info = {
     'client_id': environ['GAME_NIGHT_CLIENT_ID'],
     'client_secret': environ['GAME_NIGHT_CLIENT_SECRET']
 }
-auth = OIDCAuthentication(app, client_registration_info = client_info, issuer = environ['GAME_NIGHT_ISSUER'])
+_auth = OIDCAuthentication(app, client_registration_info = _client_info, issuer = environ['GAME_NIGHT_ISSUER'])
 
 @app.route('/api')
 @require_read_key
@@ -53,17 +53,17 @@ def api_random(sample_size = 1):
     return jsonify(sample[0] if len(sample) == 1 else sample)
 
 @app.route('/')
-@auth.oidc_auth
+@_auth.oidc_auth
 def index():
     return render_template('index.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], games = get_games(), gamemaster = is_gamemaster(), players = get_players())
 
 @app.route('/random')
-@auth.oidc_auth
+@_auth.oidc_auth
 def random():
     return render_template('index.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], games = get_random_games(1), gamemaster = is_gamemaster(), players = get_players())
 
 @app.route('/rules/<game_name>')
-@auth.oidc_auth
+@_auth.oidc_auth
 def rules(game_name):
     game = get_game(game_name)
     if game is None:
@@ -71,13 +71,13 @@ def rules(game_name):
     return render_template('rules.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], game = game, gamemaster = is_gamemaster(), players = get_players())
 
 @app.route('/submissions')
-@auth.oidc_auth
+@_auth.oidc_auth
 def submissions():
     gamemaster = is_gamemaster()
     return render_template('submissions.html', bucket = environ['GAME_NIGHT_S3_BUCKET'], gamemaster = gamemaster, games = get_submissions(gamemaster), players = get_players())
 
 @app.route('/submit', methods = ['GET', 'POST'])
-@auth.oidc_auth
+@_auth.oidc_auth
 @require_gamemaster
 def submit():
     if request.method == 'GET':
