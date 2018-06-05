@@ -26,11 +26,13 @@ def _create_filters():
     owner = request.args.get('owner')
     if owner:
         filters['owner'] = owner
-    try:
-        players = int(request.args['players'])
-        filters['$and'] = [{'min_players': {'$lte': players}}, {'max_players': {'$gte': players}}]
-    except:
-        pass
+    players = request.args.get('players')
+    if players:
+        try:
+            players = int(players)
+            filters['$and'] = [{'min_players': {'$lte': players}}, {'max_players': {'$gte': players}}]
+        except:
+            filters['$and'] = [{'min_players': {'$lte': -1}}, {'max_players': {'$gte': -1}}]
     return filters
 
 def generate_api_key(write = False):
