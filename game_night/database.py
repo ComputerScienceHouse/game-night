@@ -1,19 +1,19 @@
 from pymongo import MongoClient
-from boto3 import client
 from os import environ
+from boto3 import client
 from re import compile, error, escape, IGNORECASE, sub
 from flask import abort, request, session
 from uuid import uuid4
 from functools import wraps
 from game_night.game import Game
 
-_game_night = MongoClient().game_night
+_game_night = MongoClient('mongodb://{}:{}@{}/{}'.format(environ['MONGODB_USER'], environ['MONGODB_PASSWORD'], environ.get('MONGODB_HOST', 'localhost'), environ['MONGODB_DATABASE'])).game_night
 _api_keys = _game_night.api_keys
 _gamemasters = _game_night.gamemasters
 _games = _game_night.games
 _submissions = _game_night.submissions
 
-_s3 = client('s3', aws_access_key_id = environ['GAME_NIGHT_S3_KEY'], aws_secret_access_key = environ['GAME_NIGHT_S3_SECRET'])
+_s3 = client('s3', aws_access_key_id = environ['S3_KEY'], aws_secret_access_key = environ['S3_SECRET'])
 
 def _create_filters():
     filters = {}
@@ -107,7 +107,7 @@ def submit_game():
     game = Game()
     if game.validate():
         game = game.data
-        _s3.upload_fileobj(game['image'], environ['GAME_NIGHT_S3_BUCKET'], game['name'] + '.jpg')
+        _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg')
         _prepare_game(game)
         _games.replace_one({'name': game['name']}, game, True)
         _update_new_games()
