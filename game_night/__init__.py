@@ -37,6 +37,11 @@ def api_count():
 def api_key(write = False):
     return jsonify(generate_api_key(write))
 
+@app.route('/api/newest')
+@require_read_key
+def api_newest():
+    return jsonify(list(get_newest_games()))
+
 @app.route('/api/owners')
 @require_read_key
 def api_owners():
