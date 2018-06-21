@@ -57,12 +57,12 @@ def api_random(sample_size = 1):
 @app.route('/')
 @_auth.oidc_auth
 def index():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], games = get_games(), gamemaster = is_gamemaster(), players = get_players())
+    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_games(), players = get_players())
 
 @app.route('/random')
 @_auth.oidc_auth
 def random():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], games = get_random_games(1), gamemaster = is_gamemaster(), players = get_players())
+    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_random_games(1), players = get_players())
 
 @app.route('/rules/<game_name>')
 @_auth.oidc_auth
@@ -75,8 +75,7 @@ def rules(game_name):
 @app.route('/submissions')
 @_auth.oidc_auth
 def submissions():
-    gamemaster = is_gamemaster()
-    return render_template('submissions.html', bucket = environ['S3_BUCKET'], gamemaster = gamemaster, games = get_submissions(gamemaster), players = get_players())
+    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_submissions(), players = get_players())
 
 @app.route('/submit', methods = ['GET', 'POST'])
 @_auth.oidc_auth

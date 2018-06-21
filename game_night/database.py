@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from os import environ
 from boto3 import client
-from re import compile, error, escape, IGNORECASE, sub
+from re import compile, escape, IGNORECASE, sub
 from flask import abort, request, session
 from uuid import uuid4
 from functools import wraps
@@ -11,18 +11,29 @@ _game_night = MongoClient('mongodb://{}:{}@{}/{}'.format(environ['MONGODB_USER']
 _api_keys = _game_night.api_keys
 _gamemasters = _game_night.gamemasters
 _games = _game_night.games
-_submissions = _game_night.submissions
 
 _s3 = client('s3', aws_access_key_id = environ['S3_KEY'], aws_secret_access_key = environ['S3_SECRET'])
 
 def _create_filters():
     filters = {}
-    try:
-        filters['name'] = compile(request.args['name'], IGNORECASE)
-    except error:
-        filters['name'] = compile(escape(request.args['name']), IGNORECASE)
-    except:
-        pass
+    max_players = request.args.get('max_players')
+    if max_players:
+        try:
+            filters['max_players'] = int(max_players)
+        except:
+            filters['max_players'] = -1
+    min_players = request.args.get('min_players')
+    if min_players:
+        try:
+            filters['min_players'] = int(min_players)
+        except:
+            filters['min_players'] = -1
+    name = request.args.get('name')
+    if name:
+        try:
+            filters['name'] = compile(name, IGNORECASE)
+        except:
+            filters['name'] = compile(escape(name), IGNORECASE)
     owner = request.args.get('owner')
     if owner:
         filters['owner'] = owner
@@ -65,8 +76,10 @@ def get_players():
 def get_random_games(sample_size):
     return _games.aggregate([{'$match': _create_filters()}, {'$sample': {'size': sample_size}}, {'$project': {'_id': False}}])
 
-def get_submissions(gamemaster = False):
-    return _submissions.find() if gamemaster else _submissions.find({'username': session['userinfo']['preferred_username']})
+def get_submissions():
+    filters = _create_filters()
+    filters['submitter'] = session['userinfo']['preferred_username']
+    return _games.find(filters, {'_id': False}).sort([('sort_name', 1)])
 
 def is_gamemaster():
     return _gamemasters.count({'username': session['userinfo']['preferred_username']})
