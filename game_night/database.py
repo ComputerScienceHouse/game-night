@@ -125,12 +125,14 @@ def submit_game():
     game = Game()
     if game.validate():
         game = game.data
+        if _games.count({'name': compile('^' + escape(game['name']) + '$', IGNORECASE)}):
+            return '"{}" already exists.'.format(game['name'])
         _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg')
         _prepare_game(game)
         _games.replace_one({'name': game['name']}, game, True)
         _update_new_games()
-        return True
-    return False
+        return ''
+    return 'Unable to submit game.'
 
 def _update_new_games():
     _games.update_many({'new': True}, {'$unset': {'new': 1}})

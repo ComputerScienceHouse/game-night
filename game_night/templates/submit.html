@@ -5,6 +5,11 @@
     <div class="col-12 col-lg-6 col-md-10 col-sm-10 mx-auto my-3">
         <form class="card" enctype="multipart/form-data" method="POST">
             <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger">
+                    <strong>Error: </strong>{{error}}
+                </div>
+                {% endif %}
                 <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Image: </label>
                     <div class="col-md-10 col-sm-12">

@@ -83,5 +83,5 @@ def submissions():
 def submit():
     if request.method == 'GET':
         return render_template('submit.html', gamemaster = True, players = get_players())
-    submit_game()
-    return redirect('/')
+    error = submit_game()
+    return render_template('submit.html', error = error, gamemaster = True, players = get_players()) if error else redirect('/')
