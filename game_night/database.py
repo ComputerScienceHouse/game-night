@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+from pymongo import InsertOne, MongoClient, UpdateMany
 from os import environ
 from boto3 import client
 from re import compile, escape, IGNORECASE, sub
@@ -7,7 +7,10 @@ from uuid import uuid4
 from functools import wraps
 from game_night.game import Game
 
-_game_night = MongoClient('mongodb://{}:{}@{}/{}'.format(environ['MONGODB_USER'], environ['MONGODB_PASSWORD'], environ.get('MONGODB_HOST', 'localhost'), environ['MONGODB_DATABASE'])).game_night
+try:
+    _game_night = MongoClient('mongodb://{}:{}@{}/{}'.format(environ['MONGODB_USER'], environ['MONGODB_PASSWORD'], environ.get('MONGODB_HOST', 'localhost'), environ['MONGODB_DATABASE'])).game_night
+except:
+    _game_night = MongoClient().game_night
 _api_keys = _game_night.api_keys
 _gamemasters = _game_night.gamemasters
 _games = _game_night.games
@@ -81,6 +84,15 @@ def get_submissions():
     filters['submitter'] = session['userinfo']['preferred_username']
     return _games.find(filters, {'_id': False}).sort([('sort_name', 1)])
 
+def _insert_game(game):
+    requests = [InsertOne(game), UpdateMany({'new': True}, {'$unset': {'new': 1}})]
+    try:
+        id = list(_games.find().sort([('_id', -1)]).limit(10))[-1]['_id']
+        requests.append(UpdateMany({'_id': {'$gt': id}}, {'$set': {'new': True}}))
+    except:
+        pass
+    _games.bulk_write(requests)
+
 def is_gamemaster():
     return _gamemasters.count({'username': session['userinfo']['preferred_username']})
 
@@ -89,6 +101,7 @@ def _prepare_game(game):
     if game['owner'] == 'CSH':
         del game['owner']
     game['sort_name'] = sub('(A|(An)|(The)) ', '', game['name'])
+    game['submitter'] = session['userinfo']['preferred_username']
 
 def require_gamemaster(function):
     @wraps(function)
@@ -129,12 +142,6 @@ def submit_game():
             return '"{}" already exists.'.format(game['name'])
         _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg')
         _prepare_game(game)
-        _games.replace_one({'name': game['name']}, game, True)
-        _update_new_games()
+        _insert_game(game)
         return ''
     return 'Unable to submit game.'
-
-def _update_new_games():
-    _games.update_many({'new': True}, {'$unset': {'new': 1}})
-    for game in _games.find().sort([('_id', -1)]).limit(10):
-        _games.update_one({'name': game['name']}, {'$set': {'new': True}})
