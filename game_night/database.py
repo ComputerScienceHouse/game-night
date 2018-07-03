@@ -140,7 +140,7 @@ def submit_game():
         game = game.data
         if _games.count({'name': compile('^' + escape(game['name']) + '$', IGNORECASE)}):
             return '"{}" already exists.'.format(game['name'])
-        _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg')
+        _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg', ExtraArgs = {'ContentType': game['image'].content_type})
         _prepare_game(game)
         _insert_game(game)
         return ''
