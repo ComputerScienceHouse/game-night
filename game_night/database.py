@@ -66,7 +66,7 @@ def get_games():
 def get_newest_games():
     filters = _create_filters()
     filters['new'] = True
-    return _games.find(filters, {'_id' : False})
+    return _games.find(filters, {'_id' : False}).sort([('_id', -1)])
 
 def get_owners():
     owners = _games.distinct('owner', _create_filters())
