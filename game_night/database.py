@@ -47,6 +47,9 @@ def _create_filters():
             filters['$and'] = [{'min_players': {'$lte': players}}, {'max_players': {'$gte': players}}]
         except:
             filters['$and'] = [{'min_players': {'$lte': -1}}, {'max_players': {'$gte': -1}}]
+    submitter = request.args.get('submitter')
+    if submitter:
+        filters['submitter'] = submitter
     return filters
 
 def generate_api_key(write = False):
