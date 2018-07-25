@@ -54,6 +54,14 @@ def api_random(sample_size = 1):
     sample = list(get_random_games(sample_size))
     return jsonify(sample[0] if len(sample) == 1 else sample)
 
+@app.route('/delete/<game_name>', methods = ['GET', 'POST'])
+@_auth.oidc_auth
+@require_gamemaster
+def delete(game_name):
+    if delete_game(game_name):
+        return redirect('/')
+    abort(404)
+
 @app.route('/')
 @_auth.oidc_auth
 def index():

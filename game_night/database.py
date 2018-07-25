@@ -1,4 +1,4 @@
-from pymongo import InsertOne, MongoClient, UpdateMany
+from pymongo import InsertOne, MongoClient, UpdateOne
 from os import environ
 from boto3 import client
 from re import compile, escape, IGNORECASE, sub
@@ -52,6 +52,17 @@ def _create_filters():
         filters['submitter'] = submitter
     return filters
 
+def delete_game(name):
+    if _games.delete_one({'name': name}).deleted_count:
+        try:
+            id = list(_games.find().sort([('_id', -1)]).limit(10))[-1]['_id']
+            _games.update_many({'_id': {'$gte': id}}, {'$set': {'new': True}})
+        except:
+            pass
+        _s3.delete_object(Bucket = environ['S3_BUCKET'], Key = name + '.jpg')
+        return True
+    return False
+
 def generate_api_key(write = False):
     uuid = str(uuid4())
     _api_keys.insert_one({'key': uuid, 'write': write})
@@ -88,12 +99,10 @@ def get_submissions():
     return _games.find(filters, {'_id': False}).sort([('sort_name', 1)])
 
 def _insert_game(game):
-    requests = [InsertOne(game), UpdateMany({'new': True}, {'$unset': {'new': 1}})]
-    try:
-        id = list(_games.find().sort([('_id', -1)]).limit(10))[-1]['_id']
-        requests.append(UpdateMany({'_id': {'$gt': id}}, {'$set': {'new': True}}))
-    except:
-        pass
+    requests = [InsertOne(game)]
+    games = list(_games.find().sort([('_id', -1)]).limit(10))
+    if len(games) == 10:
+        requests.append(UpdateOne({'_id': games[-1]['_id']}, {'$unset': {'new': 1}}))
     _games.bulk_write(requests)
 
 def is_gamemaster():
@@ -101,6 +110,7 @@ def is_gamemaster():
 
 def _prepare_game(game):
     del game['image']
+    game['new'] = True
     if game['owner'] == 'CSH':
         del game['owner']
     game['sort_name'] = sub('(A|(An)|(The)) ', '', game['name'])
@@ -109,16 +119,16 @@ def _prepare_game(game):
 def require_gamemaster(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
-        if not is_gamemaster():
-            abort(403)
-        return function(*args, **kwargs)
+        if is_gamemaster():
+            return function(*args, **kwargs)
+        abort(403)
     return wrapper
 
 def require_read_key(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         try:
-            if _api_keys.find({'key': request.headers['Authorization'][7:]}).count() == 0:
+            if not _api_keys.count({'key': request.headers['Authorization'][7:]}):
                 abort(403)
         except:
             abort(403)
@@ -129,8 +139,7 @@ def require_write_key(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         try:
-            key = _api_keys.find_one({'key': request.headers['Authorization'][7:]})
-            if not key['write']:
+            if not _api_keys.find_one({'key': request.headers['Authorization'][7:]})['write']:
                 abort(403)
         except:
             abort(403)
