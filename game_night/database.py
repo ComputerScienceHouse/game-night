@@ -63,6 +63,9 @@ def delete_game(name):
         return True
     return False
 
+def game_exists(name):
+    return _games.count({'name': compile(f'^{escape(name)}$', IGNORECASE)})
+
 def generate_api_key(write = False):
     uuid = str(uuid4())
     _api_keys.insert_one({'key': uuid, 'write': write})
@@ -150,10 +153,8 @@ def submit_game():
     game = Game()
     if game.validate():
         game = game.data
-        if _games.count({'name': compile('^' + escape(game['name']) + '$', IGNORECASE)}):
-            return '"{}" already exists.'.format(game['name'])
         _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg', ExtraArgs = {'ContentType': game['image'].content_type})
         _prepare_game(game)
         _insert_game(game)
         return ''
-    return 'Unable to submit game.'
+    return next(iter(game.errors.values()))[0]
