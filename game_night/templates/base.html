@@ -30,6 +30,7 @@
                             <div class="dropdown input-group-append">
                                 <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" type="button"></button>
                                 <div class="dropdown-menu form-inline px-2">
+                                    {% if players %}
                                     <div class="form-group">
                                         <label class="mx-auto"># of players:</label>
                                         <select class="form-control mx-auto" name="players" id="players">
@@ -39,6 +40,7 @@
                                             {% endfor %}
                                         </select>
                                     </div>
+                                    {% endif %}
                                     <div class="btn-toolbar mt-2">
                                         <button class="btn btn-primary btn-sm mx-auto" type="submit">Search</button>
                                         <button class="btn btn-primary btn-sm mx-auto" formaction="/random" type="submit">Random</button>
