@@ -90,6 +90,6 @@ def submissions():
 @require_gamemaster
 def submit():
     if request.method == 'GET':
-        return render_template('submit.html', gamemaster = True, players = get_players())
-    error = submit_game()
-    return render_template('submit.html', error = error, gamemaster = True, players = get_players()) if error else redirect('/')
+        return render_template('submit.html', form = Game(link = '', max_players = 1, min_players = 1, name = '', owner = 'CSH'), gamemaster = True, players = get_players())
+    tup = submit_game()
+    return render_template('submit.html', form = tup[0], error = tup[1], gamemaster = True, players = get_players()) if isinstance(tup, tuple) else redirect('/')

@@ -159,5 +159,5 @@ def submit_game():
         _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg', ExtraArgs = {'ContentType': game['image'].content_type})
         _prepare_game(game)
         _insert_game(game)
-        return ''
-    return next(iter(game.errors.values()))[0]
+        return True
+    return game, next(iter(game.errors.values()))[0]
