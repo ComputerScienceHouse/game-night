@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    $(document).on("click", "#players", function(event) {
+    $(document).on("click", "select", function(event) {
         event.stopPropagation();
     });
 });

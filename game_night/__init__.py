@@ -65,12 +65,12 @@ def delete(game_name):
 @app.route('/')
 @_auth.oidc_auth
 def index():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_games(), players = get_players())
+    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_games(), owners = get_owners(True), players = get_players())
 
 @app.route('/random')
 @_auth.oidc_auth
 def random():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_random_games(1), players = get_players())
+    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_random_games(1), owners = get_owners(True), players = get_players())
 
 @app.route('/rules/<game_name>')
 @_auth.oidc_auth
@@ -78,18 +78,18 @@ def rules(game_name):
     game = get_game(game_name)
     if game is None:
         abort(404)
-    return render_template('rules.html', bucket = environ['S3_BUCKET'], game = game, gamemaster = is_gamemaster(), players = get_players())
+    return render_template('rules.html', bucket = environ['S3_BUCKET'], game = game, gamemaster = is_gamemaster(), owners = get_owners(True), players = get_players())
 
 @app.route('/submissions')
 @_auth.oidc_auth
 def submissions():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_submissions(), players = get_players())
+    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_submissions(), owners = get_owners(True), players = get_players())
 
 @app.route('/submit', methods = ['GET', 'POST'])
 @_auth.oidc_auth
 @require_gamemaster
 def submit():
     if request.method == 'GET':
-        return render_template('submit.html', form = Game(link = '', max_players = 1, min_players = 1, name = '', owner = 'CSH'), gamemaster = True, players = get_players())
+        return render_template('submit.html', form = Game(link = '', max_players = 1, min_players = 1, name = '', owner = 'CSH'), gamemaster = True, owners = get_owners(True), players = get_players())
     tup = submit_game()
-    return render_template('submit.html', form = tup[0], error = tup[1], gamemaster = True, players = get_players()) if isinstance(tup, tuple) else redirect('/')
+    return render_template('submit.html', form = tup[0], error = tup[1], gamemaster = True, owners = get_owners(True), players = get_players()) if isinstance(tup, tuple) else redirect('/')

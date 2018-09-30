@@ -30,10 +30,19 @@
                             <div class="dropdown input-group-append">
                                 <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" type="button"></button>
                                 <div class="dropdown-menu form-inline px-2">
+                                    <div class="form-group">
+                                        <label class="mx-auto">Owner:</label>
+                                        <select class="form-control mx-auto" name="owner">
+                                            <option value="">Any</option>
+                                            {% for owner in owners %}
+                                            <option{% if request.args.get('owner', '') == owner %} selected{% endif %} value="{{owner}}">{{owner}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                     {% if players %}
                                     <div class="form-group">
                                         <label class="mx-auto"># of players:</label>
-                                        <select class="form-control mx-auto" name="players" id="players">
+                                        <select class="form-control mx-auto" name="players">
                                             <option value="">Any</option>
                                             {% for i in range(players.min, players.max + 1) %}
                                             <option{% if request.args.get('players', '0') == i|string %} selected{% endif %} value="{{i}}">{{i}}</option>

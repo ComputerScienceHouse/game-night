@@ -85,8 +85,8 @@ def get_newest_games():
     filters['new'] = True
     return _games.find(filters, {'_id' : False}).sort([('_id', -1)])
 
-def get_owners():
-    owners = _games.distinct('owner', _create_filters())
+def get_owners(all = False):
+    owners = _games.distinct('owner') if all else _games.distinct('owner', _create_filters())
     owners.sort()
     return owners
 
@@ -117,8 +117,6 @@ def is_gamemaster():
 def _prepare_game(game):
     del game['image']
     game['new'] = True
-    if game['owner'] == 'CSH':
-        del game['owner']
     game['sort_name'] = sub('(A|(An)|(The)) ', '', game['name'])
     game['submitter'] = session['userinfo']['preferred_username']
 

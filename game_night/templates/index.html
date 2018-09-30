@@ -26,13 +26,13 @@
                 {% endif %}
             </div>
             <div class="card-footer">
-                {% if game.owner %}
                 <p class="card-text">
+                    {% if game.owner == 'CSH' %}
+                    Owner: CSH
+                    {% else %}
                     Owner: <a href="https://profiles.csh.rit.edu/user/{{game.owner}}">{{game.owner}}</a>
+                    {% endif %}
                 </p>
-                {% else %}
-                <p class="card-text">Owner: CSH</p>
-                {% endif %}
             </div>
         </div>
     </div>
