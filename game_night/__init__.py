@@ -87,7 +87,6 @@ def submissions():
 
 @app.route('/submit', methods = ['GET', 'POST'])
 @_auth.oidc_auth
-@require_gamemaster
 def submit():
     if request.method == 'GET':
         return render_template('submit.html', form = Game(link = '', max_players = 1, min_players = 1, name = '', owner = 'CSH'), gamemaster = True, owners = get_owners(True), players = get_players())
