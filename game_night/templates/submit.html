@@ -31,7 +31,14 @@
                 <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Owner: </label>
                     <div class="col-md-10 col-sm-12">
+                        {% if gamemaster %}
                         <input class="form-control" name="owner" required type="text" value="{{form.owner.data}}">
+                        {% else %}
+                        <select class="form-control" name="owner" required>
+                            <option {% if form.owner.data == session['userinfo']['preferred_username'] %}selected {% endif %}value="{{session['userinfo']['preferred_username']}}">{{session['userinfo']['preferred_username']}}</option>
+                            <option {% if form.owner.data == 'CSH' %}selected {% endif %}value="CSH">CSH</option>
+                        </select>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="form-group row">
