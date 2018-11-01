@@ -83,7 +83,7 @@ def rules(game_name):
 @app.route('/submissions')
 @_auth.oidc_auth
 def submissions():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_submissions(), owners = get_owners(True), players = get_players())
+    return render_template('submissions.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_submissions(), owners = get_owners(True), players = get_players())
 
 @app.route('/submit', methods = ['GET', 'POST'])
 @_auth.oidc_auth

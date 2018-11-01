@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% block header %}
+{% endblock %}
 {% for row in games|batch(4) %}
 <div class="row">
     {% for game in row %}
