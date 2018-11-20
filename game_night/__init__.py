@@ -5,21 +5,22 @@ from flask_pyoidc.flask_pyoidc import OIDCAuthentication
 from game_night.database import *
 
 app = Flask(__name__)
-app.config['PREFERRED_URL_SCHEME'] = environ.get('URL_SCHEME', 'https')
-app.config['SECRET_KEY'] = environ['SECRET_KEY']
-app.config['SERVER_NAME'] = environ['SERVER_NAME']
-app.config['WTF_CSRF_ENABLED'] = False
+app.config.update(
+    PREFERRED_URL_SCHEME = environ.get('URL_SCHEME', 'https'),
+    SECRET_KEY = environ['SECRET_KEY'],
+    SERVER_NAME = environ['SERVER_NAME'],
+    WTF_CSRF_ENABLED = False
+)
 app.jinja_env.lstrip_blocks = True
 app.jinja_env.trim_blocks = True
 app.url_map.strict_slashes = False
 
 Markdown(app)
 
-_client_info = {
+_auth = OIDCAuthentication(app, client_registration_info = {
     'client_id': environ['OIDC_CLIENT_ID'],
     'client_secret': environ['OIDC_CLIENT_SECRET']
-}
-_auth = OIDCAuthentication(app, client_registration_info = _client_info, issuer = environ['OIDC_ISSUER'])
+}, issuer = environ['OIDC_ISSUER'])
 
 @app.route('/api')
 @require_read_key
@@ -58,19 +59,33 @@ def api_random(sample_size = 1):
 @_auth.oidc_auth
 @require_gamemaster
 def delete(game_name):
-    if delete_game(game_name):
-        return redirect('/')
-    abort(404)
+    if not delete_game(game_name):
+        abort(403)
+    return redirect('/')
 
 @app.route('/')
 @_auth.oidc_auth
 def index():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_games(), owners = get_owners(True), players = get_players())
+    return render_template(
+        'index.html',
+        bucket = environ['S3_BUCKET'],
+        gamemaster = is_gamemaster(),
+        games = get_games(),
+        owners = get_owners(True),
+        players = get_players()
+    )
 
 @app.route('/random')
 @_auth.oidc_auth
 def random():
-    return render_template('index.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_random_games(1), owners = get_owners(True), players = get_players())
+    return render_template(
+        'index.html',
+        bucket = environ['S3_BUCKET'],
+        gamemaster = is_gamemaster(),
+        games = get_random_games(1),
+        owners = get_owners(True),
+        players = get_players()
+    )
 
 @app.route('/rules/<game_name>')
 @_auth.oidc_auth
@@ -78,17 +93,46 @@ def rules(game_name):
     game = get_game(game_name)
     if game is None:
         abort(404)
-    return render_template('rules.html', bucket = environ['S3_BUCKET'], game = game, gamemaster = is_gamemaster(), owners = get_owners(True), players = get_players())
+    return render_template(
+        'rules.html',
+        bucket = environ['S3_BUCKET'],
+        game = game,
+        gamemaster = is_gamemaster(),
+        owners = get_owners(True),
+        players = get_players()
+    )
 
 @app.route('/submissions')
 @_auth.oidc_auth
 def submissions():
-    return render_template('submissions.html', bucket = environ['S3_BUCKET'], gamemaster = is_gamemaster(), games = get_submissions(), owners = get_owners(True), players = get_players())
+    return render_template(
+        'submissions.html',
+        bucket = environ['S3_BUCKET'],
+        gamemaster = is_gamemaster(),
+        games = get_submissions(),
+        owners = get_owners(True),
+        players = get_players()
+    )
 
 @app.route('/submit', methods = ['GET', 'POST'])
 @_auth.oidc_auth
 def submit():
     if request.method == 'GET':
-        return render_template('submit.html', form = Game(link = '', max_players = 1, min_players = 1, name = '', owner = session['userinfo']['preferred_username']), gamemaster = is_gamemaster(), owners = get_owners(True), players = get_players())
+        return render_template(
+            'submit.html',
+            form = Game(expansion = '', link = '', max_players = 1, min_players = 1, name = '', owner = session['userinfo']['preferred_username']),
+            gamemaster = is_gamemaster(),
+            game_names = get_game_names(),
+            owners = get_owners(True),
+            players = get_players()
+        )
     tup = submit_game()
-    return render_template('submit.html', form = tup[0], error = tup[1], gamemaster = is_gamemaster(), owners = get_owners(True), players = get_players()) if isinstance(tup, tuple) else redirect('/')
+    return render_template(
+        'submit.html',
+        form = tup[0],
+        error = tup[1],
+        gamemaster = is_gamemaster(),
+        game_names = get_game_names(),
+        owners = get_owners(True),
+        players = get_players()
+    ) if isinstance(tup, tuple) else redirect('/')

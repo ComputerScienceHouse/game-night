@@ -11,6 +11,17 @@
                 </div>
                 {% endif %}
                 <div class="form-group row">
+                    <label class="col-form-label col-md-3 col-sm-12">Expansion: </label>
+                    <div class="col-md-9 col-sm-12">
+                        <select class="form-control" name="expansion">
+                            <option {% if not form.expansion.data %}selected {% endif %}value="">None</option>
+                            {% for name in game_names %}
+                            <option {% if form.expansion.data == name %}selected {% endif %}value="{{name}}">{{name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Image: </label>
                     <div class="col-md-10 col-sm-12">
                         <input accept="image/jpeg" class="form-control" name="image" required type="file">

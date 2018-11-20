@@ -1,14 +1,16 @@
+from re import compile, escape, I
 from pymongo import InsertOne, MongoClient, UpdateOne
 from os import environ
 from boto3 import client
-from re import compile, escape, IGNORECASE, sub
 from flask import abort, request, session
 from uuid import uuid4
 from functools import wraps
 from game_night.game import Game
 
+_sub_regex = compile('(A|(An)|(The)) ')
+
 try:
-    _game_night = MongoClient('mongodb://{}:{}@{}/{}'.format(environ['MONGODB_USER'], environ['MONGODB_PASSWORD'], environ.get('MONGODB_HOST', 'localhost'), environ['MONGODB_DATABASE'])).game_night
+    _game_night = MongoClient(f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}').game_night
 except:
     _game_night = MongoClient().game_night
 _api_keys = _game_night.api_keys
@@ -34,9 +36,9 @@ def _create_filters():
     name = request.args.get('name')
     if name:
         try:
-            filters['name'] = compile(name, IGNORECASE)
+            filters['name'] = compile(name, I)
         except:
-            filters['name'] = compile(escape(name), IGNORECASE)
+            filters['name'] = compile(escape(name), I)
     owner = request.args.get('owner')
     if owner:
         filters['owner'] = owner
@@ -44,9 +46,15 @@ def _create_filters():
     if players:
         try:
             players = int(players)
-            filters['$and'] = [{'min_players': {'$lte': players}}, {'max_players': {'$gte': players}}]
+            filters['$and'] = [
+                {'min_players': {'$lte': players}},
+                {'max_players': {'$gte': players}}
+            ]
         except:
-            filters['$and'] = [{'min_players': {'$lte': -1}}, {'max_players': {'$gte': -1}}]
+            filters['$and'] = [
+                {'min_players': {'$lte': -1}},
+                {'max_players': {'$gte': -1}}
+            ]
     submitter = request.args.get('submitter')
     if submitter:
         filters['submitter'] = submitter
@@ -64,7 +72,7 @@ def delete_game(name):
     return False
 
 def game_exists(name):
-    return _games.count({'name': compile(f'^{escape(name)}$', IGNORECASE)})
+    return _games.count({'name': compile(f'^{escape(name)}$', I)})
 
 def generate_api_key(write = False):
     uuid = str(uuid4())
@@ -76,6 +84,9 @@ def get_count():
 
 def get_game(name):
     return _games.find_one({'name': name})
+
+def get_game_names():
+    return (game['name'] for game in _games.find({}, {'_id': False, 'name': True}).sort([('sort_name', 1)]))
 
 def get_games():
     return _games.find(_create_filters(), {'_id': False}).sort([('sort_name', 1)])
@@ -92,12 +103,18 @@ def get_owners(all = False):
 
 def get_players():
     try:
-        return _games.aggregate([{'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}]).next()
+        return _games.aggregate([
+            {'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}
+        ]).next()
     except:
         return None
 
 def get_random_games(sample_size):
-    return _games.aggregate([{'$match': _create_filters()}, {'$sample': {'size': sample_size}}, {'$project': {'_id': False}}])
+    return _games.aggregate([
+        {'$match': _create_filters()},
+        {'$sample': {'size': sample_size}},
+        {'$project': {'_id': False}}
+    ])
 
 def get_submissions():
     filters = _create_filters()
@@ -115,17 +132,19 @@ def is_gamemaster():
     return _gamemasters.count({'username': session['userinfo']['preferred_username']})
 
 def _prepare_game(game):
+    if not game['expansion']:
+        del game['expansion']
     del game['image']
     game['new'] = True
-    game['sort_name'] = sub('(A|(An)|(The)) ', '', game['name'])
+    game['sort_name'] = _sub_regex.sub('', game['name'])
     game['submitter'] = session['userinfo']['preferred_username']
 
 def require_gamemaster(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
-        if is_gamemaster():
-            return function(*args, **kwargs)
-        abort(403)
+        if not is_gamemaster():
+            abort(403)
+        return function(*args, **kwargs)
     return wrapper
 
 def require_read_key(function):
@@ -152,10 +171,10 @@ def require_write_key(function):
 
 def submit_game():
     game = Game()
-    if game.validate():
-        game = game.data
-        _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg', ExtraArgs = {'ContentType': game['image'].content_type})
-        _prepare_game(game)
-        _insert_game(game)
-        return True
-    return game, next(iter(game.errors.values()))[0]
+    if not game.validate():
+        return game, next(iter(game.errors.values()))[0]
+    game = game.data
+    _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg', ExtraArgs = {'ContentType': game['image'].content_type})
+    _prepare_game(game)
+    _insert_game(game)
+    return True
