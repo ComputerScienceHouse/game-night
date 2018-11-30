@@ -120,6 +120,7 @@ def submit():
     if request.method == 'GET':
         return render_template(
             'submit.html',
+            bucket = environ['S3_BUCKET'],
             form = Game(expansion = '', link = '', max_players = 1, min_players = 1, name = '', owner = session['userinfo']['preferred_username']),
             gamemaster = is_gamemaster(),
             game_names = get_game_names(),
@@ -129,6 +130,7 @@ def submit():
     tup = submit_game()
     return render_template(
         'submit.html',
+        bucket = environ['S3_BUCKET'],
         form = tup[0],
         error = tup[1],
         gamemaster = is_gamemaster(),
