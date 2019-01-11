@@ -23,18 +23,31 @@ def _validate_name(form, field):
 
 def _validate_owner(form, field):
     from game_night.database import is_gamemaster
-    if not is_gamemaster() and field.data not in ['CSH', session['userinfo']['preferred_username']]:
+    if not is_gamemaster(session['userinfo']['preferred_username']) and field.data not in ['CSH', session['userinfo']['preferred_username']]:
         raise ValidationError('Only gamemasters can enter any owner')
 
 class Game(FlaskForm):
 
     expansion = StringField('expansion', validators = [_validate_expansion])
-    image = FileField('image', validators = [FileRequired(), FileAllowed(['jpg'])])
-    link = StringField('link', validators = [DataRequired(), Regexp('https://boardgamegeek.com/.*'), _validate_link])
+    image = FileField('image', validators = [
+        FileRequired(), FileAllowed(['jpg'])
+    ])
+    link = StringField('link', validators = [
+        DataRequired(), Regexp('https://boardgamegeek.com/.*'), _validate_link
+    ])
     max_players = IntegerField('max_players', validators = [DataRequired()])
     min_players = IntegerField('min_players', validators = [DataRequired()])
     name = StringField('name', validators = [DataRequired(), _validate_name])
     owner = StringField('owner', validators = [DataRequired(), _validate_owner])
+
+    def __init__(self, submitter = None):
+        if submitter:
+            super().__init__(
+                expansion = '', link = '', max_players = 1, min_players = 1,
+                name = '', owner = submitter
+            )
+        else:
+            super().__init__()
 
     def validate(self):
         if not FlaskForm.validate(self):

@@ -1,11 +1,8 @@
 from re import compile, escape, I
 from pymongo import InsertOne, MongoClient, UpdateOne
 from os import environ
-from boto3 import client
-from flask import abort, request, session
 from uuid import uuid4
 from functools import wraps
-from game_night.game import Game
 
 _sub_regex = compile('(A|(An)|(The)) ')
 
@@ -17,32 +14,33 @@ _api_keys = _game_night.api_keys
 _gamemasters = _game_night.gamemasters
 _games = _game_night.games
 
-_s3 = client('s3', aws_access_key_id = environ['S3_KEY'], aws_secret_access_key = environ['S3_SECRET'])
+def api_key_exists(key):
+    return _api_keys.count({'key': key})
 
-def _create_filters():
+def _create_filters(arguments, **kwargs):
     filters = {}
-    max_players = request.args.get('max_players')
+    max_players = arguments.get('max_players')
     if max_players:
         try:
             filters['max_players'] = int(max_players)
         except:
             filters['max_players'] = -1
-    min_players = request.args.get('min_players')
+    min_players = arguments.get('min_players')
     if min_players:
         try:
             filters['min_players'] = int(min_players)
         except:
             filters['min_players'] = -1
-    name = request.args.get('name')
+    name = arguments.get('name')
     if name:
         try:
             filters['name'] = compile(name, I)
         except:
             filters['name'] = compile(escape(name), I)
-    owner = request.args.get('owner')
+    owner = arguments.get('owner')
     if owner:
         filters['owner'] = owner
-    players = request.args.get('players')
+    players = arguments.get('players')
     if players:
         try:
             players = int(players)
@@ -55,126 +53,108 @@ def _create_filters():
                 {'min_players': {'$lte': -1}},
                 {'max_players': {'$gte': -1}}
             ]
-    submitter = request.args.get('submitter')
+    submitter = arguments.get('submitter')
     if submitter:
         filters['submitter'] = submitter
-    return filters
+    return dict(filters, **kwargs)
+
+def _create_sort(arguments, **kwargs):
+    try:
+        return dict(
+            {arguments['sort']: -1 if 'descending' in arguments else 1},
+            **kwargs
+        )
+    except:
+        return kwargs
 
 def delete_game(name):
-    if _games.delete_one({'name': name}).deleted_count:
-        try:
-            id = list(_games.find().sort([('_id', -1)]).limit(10))[-1]['_id']
-            _games.update_many({'_id': {'$gte': id}}, {'$set': {'new': True}})
-        except:
-            pass
-        _s3.delete_object(Bucket = environ['S3_BUCKET'], Key = name + '.jpg')
-        return True
-    return False
+    if not _games.delete_one({'name': name}).deleted_count:
+        return False
+    try:
+        id = list(_games.find().sort([('_id', -1)]).limit(10))[-1]['_id']
+        _games.update_many({'_id': {'$gte': id}}, {'$set': {'new': True}})
+    except:
+        pass
+    return True
 
 def game_exists(name):
     return _games.count({'name': compile(f'^{escape(name)}$', I)})
 
-def generate_api_key(write = False):
+def generate_api_key():
     uuid = str(uuid4())
-    _api_keys.insert_one({'key': uuid, 'write': write})
+    _api_keys.insert_one({'key': uuid})
     return uuid
 
-def get_count():
-    return _games.count(_create_filters())
+def get_count(arguments):
+    return _games.count(_create_filters(arguments))
 
 def get_game(name):
     return _games.find_one({'name': name})
 
 def get_game_names():
-    return (game['name'] for game in _games.find({}, {'_id': False, 'name': True}).sort([('sort_name', 1)]))
+    return (game['name'] for game in _games.find({}, {
+        '_id': False, 'name': True
+    }).sort([('sort_name', 1)]))
 
-def get_games():
-    return _games.find(_create_filters(), {'_id': False}).sort([('sort_name', 1)])
+def get_games(arguments):
+    return _games.aggregate([
+        {'$match': _create_filters(arguments)},
+        {'$sort': _create_sort(arguments, sort_name = 1)},
+        {'$project': {'_id': False}}
+    ])
 
-def get_newest_games():
-    filters = _create_filters()
-    filters['new'] = True
-    return _games.find(filters, {'_id' : False}).sort([('_id', -1)])
+def get_newest_games(arguments):
+    return _games.aggregate([
+        {'$match': _create_filters(arguments, new = True)},
+        {'$sort': _create_sort(arguments, _id = -1)},
+        {'$project': {'_id': False}}
+    ])
 
-def get_owners(all = False):
-    owners = _games.distinct('owner') if all else _games.distinct('owner', _create_filters())
-    owners.sort()
-    return owners
+def get_owners(arguments = None):
+    aggregation = [
+        {'$group': {'_id': '$owner'}},
+        {'$sort': {'_id': 1}},
+    ]
+    if arguments:
+        aggregation = {'$match': _create_filters(arguments)} + aggregation
+    return (game['_id'] for game in _games.aggregate(aggregation))
 
 def get_players():
     try:
-        return _games.aggregate([
+        return next(_games.aggregate([
             {'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}
-        ]).next()
+        ]))
     except:
         return None
 
-def get_random_games(sample_size):
+def get_random_games(arguments, sample_size):
     return _games.aggregate([
-        {'$match': _create_filters()},
+        {'$match': _create_filters(arguments)},
         {'$sample': {'size': sample_size}},
         {'$project': {'_id': False}}
     ])
 
-def get_submissions():
-    filters = _create_filters()
-    filters['submitter'] = session['userinfo']['preferred_username']
-    return _games.find(filters, {'_id': False}).sort([('sort_name', 1)])
+def get_submissions(arguments, submitter):
+    return _games.aggregate([
+        {'$match': _create_filters(arguments, submitter = submitter)},
+        {'$sort': _create_sort(arguments, sort_name = 1)},
+        {'$project': {'_id': False}}
+    ])
 
-def _insert_game(game):
-    requests = [InsertOne(game)]
-    games = list(_games.find().sort([('_id', -1)]).limit(10))
-    if len(games) == 10:
-        requests.append(UpdateOne({'_id': games[-1]['_id']}, {'$unset': {'new': 1}}))
-    _games.bulk_write(requests)
-
-def is_gamemaster():
-    return _gamemasters.count({'username': session['userinfo']['preferred_username']})
-
-def _prepare_game(game):
+def insert_game(game, submitter):
     if not game['expansion']:
         del game['expansion']
     del game['image']
     game['new'] = True
     game['sort_name'] = _sub_regex.sub('', game['name'])
-    game['submitter'] = session['userinfo']['preferred_username']
+    game['submitter'] = submitter
+    requests = [InsertOne(game)]
+    games = list(_games.find().sort([('_id', -1)]).limit(10))
+    if len(games) == 10:
+        requests.append(UpdateOne({'_id': games[-1]['_id']}, {
+            '$unset': {'new': 1}
+        }))
+    _games.bulk_write(requests)
 
-def require_gamemaster(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        if not is_gamemaster():
-            abort(403)
-        return function(*args, **kwargs)
-    return wrapper
-
-def require_read_key(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        try:
-            if not _api_keys.count({'key': request.headers['Authorization'][7:]}):
-                abort(403)
-        except:
-            abort(403)
-        return function(*args, **kwargs)
-    return wrapper
-
-def require_write_key(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        try:
-            if not _api_keys.find_one({'key': request.headers['Authorization'][7:]})['write']:
-                abort(403)
-        except:
-            abort(403)
-        return function(*args, **kwargs)
-    return wrapper
-
-def submit_game():
-    game = Game()
-    if not game.validate():
-        return game, next(iter(game.errors.values()))[0]
-    game = game.data
-    _s3.upload_fileobj(game['image'], environ['S3_BUCKET'], game['name'] + '.jpg', ExtraArgs = {'ContentType': game['image'].content_type})
-    _prepare_game(game)
-    _insert_game(game)
-    return True
+def is_gamemaster(username):
+    return _gamemasters.count({'username': username})

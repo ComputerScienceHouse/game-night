@@ -1,14 +1,16 @@
-from flask import abort, Flask, jsonify, redirect, render_template
+from flask import *
 from os import environ
 from flaskext.markdown import Markdown
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
+from game_night.auth import require_gamemaster, require_read_key
 from game_night.database import *
+from boto3 import client
+from game_night.game import Game
 
 app = Flask(__name__)
 app.config.update(
     PREFERRED_URL_SCHEME = environ.get('URL_SCHEME', 'https'),
-    SECRET_KEY = environ['SECRET_KEY'],
-    SERVER_NAME = environ['SERVER_NAME'],
+    SECRET_KEY = environ['SECRET_KEY'], SERVER_NAME = environ['SERVER_NAME'],
     WTF_CSRF_ENABLED = False
 )
 app.jinja_env.lstrip_blocks = True
@@ -22,37 +24,42 @@ _auth = OIDCAuthentication(app, client_registration_info = {
     'client_secret': environ['OIDC_CLIENT_SECRET']
 }, issuer = environ['OIDC_ISSUER'])
 
+_s3 = client(
+    's3',
+    aws_access_key_id = environ['S3_KEY'],
+    aws_secret_access_key = environ['S3_SECRET']
+)
+
 @app.route('/api')
 @require_read_key
 def api():
-    return jsonify(list(get_games()))
+    return jsonify(list(get_games(request.args)))
 
 @app.route('/api/count')
 @require_read_key
 def api_count():
-    return jsonify(get_count())
+    return jsonify(get_count(request.args))
 
 @app.route('/api/key', methods = ['GET', 'POST'])
-@app.route('/api/key/write', defaults = {'write': True}, methods = ['GET', 'POST'])
 @require_gamemaster
-def api_key(write = False):
-    return jsonify(generate_api_key(write))
+def api_key():
+    return jsonify(generate_api_key())
 
 @app.route('/api/newest')
 @require_read_key
 def api_newest():
-    return jsonify(list(get_newest_games()))
+    return jsonify(list(get_newest_games(request.args)))
 
 @app.route('/api/owners')
 @require_read_key
 def api_owners():
-    return jsonify(get_owners())
+    return jsonify(get_owners(request.args))
 
 @app.route('/api/random')
 @app.route('/api/random/<int:sample_size>')
 @require_read_key
 def api_random(sample_size = 1):
-    sample = list(get_random_games(sample_size))
+    sample = list(get_random_games(request.args, sample_size))
     return jsonify(sample[0] if len(sample) == 1 else sample)
 
 @app.route('/delete/<game_name>', methods = ['GET', 'POST'])
@@ -60,46 +67,41 @@ def api_random(sample_size = 1):
 @require_gamemaster
 def delete(game_name):
     if not delete_game(game_name):
-        abort(403)
+        abort(404)
+    _s3.delete_object(Bucket = environ['S3_BUCKET'], Key = game_name + '.jpg')
     return redirect('/')
+
+def _get_template_variables():
+    return {
+        'bucket': environ['S3_BUCKET'],
+        'gamemaster': is_gamemaster(session['userinfo']['preferred_username']),
+        'owners': get_owners(), 'players': get_players()
+    }
 
 @app.route('/')
 @_auth.oidc_auth
 def index():
     return render_template(
-        'index.html',
-        bucket = environ['S3_BUCKET'],
-        gamemaster = is_gamemaster(),
-        games = get_games(),
-        owners = get_owners(True),
-        players = get_players()
+        'index.html', games = get_games(request.args),
+        **_get_template_variables()
     )
 
 @app.route('/random')
 @_auth.oidc_auth
 def random():
     return render_template(
-        'index.html',
-        bucket = environ['S3_BUCKET'],
-        gamemaster = is_gamemaster(),
-        games = get_random_games(1),
-        owners = get_owners(True),
-        players = get_players()
+        'index.html', games = get_random_games(request.args, 1),
+        **_get_template_variables()
     )
 
 @app.route('/rules/<game_name>')
 @_auth.oidc_auth
 def rules(game_name):
     game = get_game(game_name)
-    if game is None:
+    if not game:
         abort(404)
     return render_template(
-        'rules.html',
-        bucket = environ['S3_BUCKET'],
-        game = game,
-        gamemaster = is_gamemaster(),
-        owners = get_owners(True),
-        players = get_players()
+        'rules.html', game = game, **_get_template_variables()
     )
 
 @app.route('/submissions')
@@ -107,11 +109,10 @@ def rules(game_name):
 def submissions():
     return render_template(
         'submissions.html',
-        bucket = environ['S3_BUCKET'],
-        gamemaster = is_gamemaster(),
-        games = get_submissions(),
-        owners = get_owners(True),
-        players = get_players()
+        games = get_submissions(
+            request.args,
+            session['userinfo']['preferred_username']
+        ), **_get_template_variables()
     )
 
 @app.route('/submit', methods = ['GET', 'POST'])
@@ -120,21 +121,20 @@ def submit():
     if request.method == 'GET':
         return render_template(
             'submit.html',
-            bucket = environ['S3_BUCKET'],
-            form = Game(expansion = '', link = '', max_players = 1, min_players = 1, name = '', owner = session['userinfo']['preferred_username']),
-            gamemaster = is_gamemaster(),
-            game_names = get_game_names(),
-            owners = get_owners(True),
-            players = get_players()
+            form = Game(session['userinfo']['preferred_username']),
+            game_names = get_game_names(), **_get_template_variables()
         )
-    tup = submit_game()
-    return render_template(
-        'submit.html',
-        bucket = environ['S3_BUCKET'],
-        form = tup[0],
-        error = tup[1],
-        gamemaster = is_gamemaster(),
-        game_names = get_game_names(),
-        owners = get_owners(True),
-        players = get_players()
-    ) if isinstance(tup, tuple) else redirect('/')
+    game = Game()
+    if not game.validate():
+        return render_template(
+            'submit.html',
+            error = next(iter(game.errors.values()))[0], form = game,
+            game_names = get_game_names(), **_get_template_variables()
+        )
+    game = game.data
+    _s3.upload_fileobj(
+        game['image'], environ['S3_BUCKET'], game['name'] + '.jpg',
+        ExtraArgs = {'ContentType': game['image'].content_type}
+    )
+    insert_game(game, session['userinfo']['preferred_username'])
+    return redirect('/')
