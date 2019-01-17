@@ -1,10 +1,11 @@
 from flask import *
 from os import environ
 from flaskext.markdown import Markdown
+from flask_pyoidc.provider_configuration import *
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
+from boto3 import client
 from game_night.auth import require_gamemaster, require_read_key
 from game_night.database import *
-from boto3 import client
 from game_night.game import Game
 
 app = Flask(__name__)
@@ -19,10 +20,14 @@ app.url_map.strict_slashes = False
 
 Markdown(app)
 
-_auth = OIDCAuthentication(app, client_registration_info = {
-    'client_id': environ['OIDC_CLIENT_ID'],
-    'client_secret': environ['OIDC_CLIENT_SECRET']
-}, issuer = environ['OIDC_ISSUER'])
+_config = ProviderConfiguration(
+    client_metadata = ClientMetadata(
+        client_id = environ['OIDC_CLIENT_ID'],
+        client_secret = environ['OIDC_CLIENT_SECRET']
+    ),
+    issuer = environ['OIDC_ISSUER']
+)
+_auth = OIDCAuthentication({'default': _config}, app)
 
 _s3 = client(
     's3',
@@ -63,7 +68,7 @@ def api_random(sample_size = 1):
     return jsonify(sample[0] if len(sample) == 1 else sample)
 
 @app.route('/delete/<game_name>', methods = ['GET', 'POST'])
-@_auth.oidc_auth
+@_auth.oidc_auth('default')
 @require_gamemaster
 def delete(game_name):
     if not delete_game(game_name):
@@ -79,7 +84,7 @@ def _get_template_variables():
     }
 
 @app.route('/')
-@_auth.oidc_auth
+@_auth.oidc_auth('default')
 def index():
     return render_template(
         'index.html', games = get_games(request.args),
@@ -87,7 +92,7 @@ def index():
     )
 
 @app.route('/random')
-@_auth.oidc_auth
+@_auth.oidc_auth('default')
 def random():
     return render_template(
         'index.html', games = get_random_games(request.args, 1),
@@ -95,7 +100,7 @@ def random():
     )
 
 @app.route('/rules/<game_name>')
-@_auth.oidc_auth
+@_auth.oidc_auth('default')
 def rules(game_name):
     game = get_game(game_name)
     if not game:
@@ -105,7 +110,7 @@ def rules(game_name):
     )
 
 @app.route('/submissions')
-@_auth.oidc_auth
+@_auth.oidc_auth('default')
 def submissions():
     return render_template(
         'submissions.html',
@@ -116,7 +121,7 @@ def submissions():
     )
 
 @app.route('/submit', methods = ['GET', 'POST'])
-@_auth.oidc_auth
+@_auth.oidc_auth('default')
 def submit():
     if request.method == 'GET':
         return render_template(
