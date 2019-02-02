@@ -21,18 +21,17 @@ app.url_map.strict_slashes = False
 Markdown(app)
 
 _config = ProviderConfiguration(
+    environ['OIDC_ISSUER'],
     client_metadata = ClientMetadata(
-        client_id = environ['OIDC_CLIENT_ID'],
-        client_secret = environ['OIDC_CLIENT_SECRET']
-    ),
-    issuer = environ['OIDC_ISSUER']
+        environ['OIDC_CLIENT_ID'], environ['OIDC_CLIENT_SECRET']
+    )
 )
 _auth = OIDCAuthentication({'default': _config}, app)
 
 _s3 = client(
-    's3',
-    aws_access_key_id = environ['S3_KEY'],
-    aws_secret_access_key = environ['S3_SECRET']
+    's3', aws_access_key_id = environ['S3_KEY'],
+    aws_secret_access_key = environ['S3_SECRET'],
+    endpoint_url = environ['S3_ENDPOINT']
 )
 
 @app.route('/api')
@@ -78,9 +77,9 @@ def delete(game_name):
 
 def _get_template_variables():
     return {
-        'bucket': environ['S3_BUCKET'],
         'gamemaster': is_gamemaster(session['userinfo']['preferred_username']),
-        'owners': get_owners(), 'players': get_players()
+        'owners': get_owners(), 'players': get_players(),
+        's3_url': f'{environ["S3_ENDPOINT"]}/{environ["S3_BUCKET"]}'
     }
 
 @app.route('/')
@@ -139,7 +138,9 @@ def submit():
     game = game.data
     _s3.upload_fileobj(
         game['image'], environ['S3_BUCKET'], game['name'] + '.jpg',
-        ExtraArgs = {'ContentType': game['image'].content_type}
+        ExtraArgs = {
+            'ACL': 'public-read', 'ContentType': game['image'].content_type
+        }
     )
     insert_game(game, session['userinfo']['preferred_username'])
     return redirect('/')
