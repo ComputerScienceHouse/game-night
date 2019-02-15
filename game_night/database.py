@@ -7,7 +7,10 @@ from functools import wraps
 _sub_regex = compile('(A|(An)|(The)) ')
 
 try:
-    _game_night = MongoClient(f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}').game_night
+    _game_night = MongoClient(
+        f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}',
+        ssl = 'MONGODB_SSL' in environ
+    ).game_night
 except:
     _game_night = MongoClient().game_night
 _api_keys = _game_night.api_keys
