@@ -49,6 +49,11 @@ def api_count():
 def api_key():
     return jsonify(generate_api_key())
 
+@app.route('/api/keys')
+@require_gamemaster
+def api_keys():
+    return jsonify(get_api_keys())
+
 @app.route('/api/newest')
 @require_read_key
 def api_newest():

@@ -7,15 +7,15 @@ from functools import wraps
 _sub_regex = compile('(A|(An)|(The)) ')
 
 try:
-    _game_night = MongoClient(
+    _database = MongoClient(
         f'mongodb://{environ["MONGODB_USER"]}:{environ["MONGODB_PASSWORD"]}@{environ.get("MONGODB_HOST", "localhost")}/{environ["MONGODB_DATABASE"]}',
         ssl = 'MONGODB_SSL' in environ
-    ).game_night
+    )[environ['MONGODB_DATABASE']]
 except:
-    _game_night = MongoClient().game_night
-_api_keys = _game_night.api_keys
-_gamemasters = _game_night.gamemasters
-_games = _game_night.games
+    _database = MongoClient()['MONGODB_DATABASE']
+_api_keys = _database.api_keys
+_gamemasters = _database.gamemasters
+_games = _database.games
 
 def api_key_exists(key):
     return _api_keys.count({'key': key})
@@ -87,6 +87,9 @@ def generate_api_key():
     uuid = str(uuid4())
     _api_keys.insert_one({'key': uuid})
     return uuid
+
+def get_api_keys():
+    return list(_api_keys.find())
 
 def get_count(arguments):
     return _games.count(_create_filters(arguments))
