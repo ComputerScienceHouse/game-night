@@ -89,7 +89,7 @@ def generate_api_key():
     return uuid
 
 def get_api_keys():
-    return list(_api_keys.find())
+    return _api_keys.find()
 
 def get_count(arguments):
     return _games.count(_create_filters(arguments))
@@ -117,10 +117,7 @@ def get_newest_games(arguments):
     ])
 
 def get_owners(arguments = None):
-    aggregation = [
-        {'$group': {'_id': '$owner'}},
-        {'$sort': {'_id': 1}},
-    ]
+    aggregation = [{'$group': {'_id': '$owner'}}, {'$sort': {'_id': 1}}]
     if arguments:
         aggregation = {'$match': _create_filters(arguments)} + aggregation
     return (game['_id'] for game in _games.aggregate(aggregation))
@@ -136,8 +133,7 @@ def get_players():
 def get_random_games(arguments, sample_size):
     return _games.aggregate([
         {'$match': _create_filters(arguments)},
-        {'$sample': {'size': sample_size}},
-        {'$project': {'_id': False}}
+        {'$sample': {'size': sample_size}}, {'$project': {'_id': False}}
     ])
 
 def get_submissions(arguments, submitter):
@@ -146,6 +142,13 @@ def get_submissions(arguments, submitter):
         {'$sort': _create_sort(arguments, sort_name = 1)},
         {'$project': {'_id': False}}
     ])
+
+def get_submitters(arguments):
+    aggregation = [
+        {'$match': _create_filters(arguments)}, {'$group': {'_id': '$owner'}},
+        {'$sort': {'_id': 1}},
+    ]
+    return (game['_id'] for game in _games.aggregate(aggregation))
 
 def insert_game(game, submitter):
     if not game['expansion']:

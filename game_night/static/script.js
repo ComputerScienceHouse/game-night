@@ -1,5 +1,3 @@
-$(document).ready(function() {
-    $(document).on("click", "select", function(event) {
-        event.stopPropagation();
-    });
+$(document).ready(() => {
+    $(document).on('click', 'select', event => event.stopPropagation());
 });

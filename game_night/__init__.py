@@ -52,7 +52,7 @@ def api_key():
 @app.route('/api/keys')
 @require_gamemaster
 def api_keys():
-    return jsonify(get_api_keys())
+    return jsonify(list(get_api_keys()))
 
 @app.route('/api/newest')
 @require_read_key
@@ -62,7 +62,7 @@ def api_newest():
 @app.route('/api/owners')
 @require_read_key
 def api_owners():
-    return jsonify(get_owners(request.args))
+    return jsonify(list(get_owners(request.args)))
 
 @app.route('/api/random')
 @app.route('/api/random/<int:sample_size>')
@@ -70,6 +70,11 @@ def api_owners():
 def api_random(sample_size = 1):
     sample = list(get_random_games(request.args, sample_size))
     return jsonify(sample[0] if len(sample) == 1 else sample)
+
+@app.route('/api/submitters')
+@require_read_key
+def api_submitters():
+    return jsonify(list(get_submitters(request.args)))
 
 @app.route('/delete/<game_name>', methods = ['GET', 'POST'])
 @_auth.oidc_auth('default')
