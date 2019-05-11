@@ -12,7 +12,7 @@ try:
         ssl = 'MONGODB_SSL' in environ
     )[environ['MONGODB_DATABASE']]
 except:
-    _database = MongoClient()['MONGODB_DATABASE']
+    _database = MongoClient()[environ['MONGODB_DATABASE']]
 _api_keys = _database.api_keys
 _gamemasters = _database.gamemasters
 _games = _database.games
@@ -97,10 +97,11 @@ def get_count(arguments):
 def get_game(name):
     return _games.find_one({'name': name})
 
-def get_game_names():
-    return (game['name'] for game in _games.find({}, {
-        '_id': False, 'name': True
-    }).sort([('sort_name', 1)]))
+def get_game_names(expansion = None):
+    return (game['name'] for game in _games.find(
+        {'expansion': expansion} if expansion else {},
+        {'_id': False, 'name': True}
+    ).sort([('sort_name', 1)]))
 
 def get_games(arguments):
     return _games.aggregate([

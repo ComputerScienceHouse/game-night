@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-6 col-md-10 col-sm-10 mx-auto my-3">
+        <div class="card">
+            <a href="{{game.link}}">
+                <img alt="{{game.name}}" class="card-img-top card-img-top-large" src="{{s3_url}}/{{game.name}}.jpg" title="{{game.name}}">
+            </a>
+            <div class="card-body">
+                <h1 class="card-title">
+                    <a href="{{game.link}}">{{game.name}}</a>
+                    {% if game.new %}
+                    <span class="badge badge-success">New</span>
+                    {% endif %}
+                </h1>
+                <hr>
+                {% if game.expansion %}
+                <h2 class="card-text">Expansion of: <a href="/game/{{game.expansion}}">{{game.expansion}}</a></h2>
+                {% endif %}
+                {% if expansions %}
+                <h2 class="card-text">
+                    Expansion(s): 
+                    {% for expansion in expansions %}
+                    <a href="/game/{{expansion}}">{{expansion}}</a>{{', ' if not loop.last}}
+                    {% endfor %}
+                </h2>
+                {% endif %}
+                {% if game.max_players == game.min_players %}
+                <h2 class="card-text">Players: {{game.max_players}}</h2>
+                {% else %}
+                <h2 class="card-text">Players: {{game.min_players}} - {{game.max_players}}</h2>
+                {% endif %}
+                {% if game.rules %}
+                <hr>
+                <h2>House Rules</h2>
+                {{game.rules.markdown|markdown}}
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <ul class="card-text list-inline navbar-user">
+                    <li class="list-inline-item">Owner: </li>
+                    <li class="list-inline-item">
+                        {% if game.owner == 'CSH' %}
+                        <strong>CSH</strong>
+                        {% else %}
+                        <a href="https://profiles.csh.rit.edu/user/{{game.owner}}">
+                            <img alt="{{game.owner}}" src="https://profiles.csh.rit.edu/image/{{game.owner}}" title="{{game.owner}}">
+                        </a>
+                        {% endif %}
+                    </li>
+                    <li class="list-inline-item">Submitter: </li>
+                    <li class="list-inline-item">
+                        <a href="https://profiles.csh.rit.edu/user/{{game.submitter}}">
+                            <img alt="{{game.submitter}}" src="https://profiles.csh.rit.edu/image/{{game.submitter}}" title="{{game.submitter}}">
+                        </a>
+                    </li>
+                    {% if game.rules %}
+                    <li class="list-inline-item">Contributors: </li>
+                    <li class="list-inline-item">
+                        {% for contributor in game.rules.contributors %}
+                        <a href="https://profiles.csh.rit.edu/user/{{contributor}}">
+                            <img alt="{{contributor}}" src="https://profiles.csh.rit.edu/image/{{contributor}}" title="{{contributor}}">
+                        </a>
+                        {% endfor %}
+                    </li>
+                    {% endif %}
+                </ul>                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

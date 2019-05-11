@@ -100,22 +100,23 @@ def index():
         **_get_template_variables()
     )
 
+@app.route('/game/<game_name>')
+@_auth.oidc_auth('default')
+def game(game_name):
+    g = get_game(game_name)
+    if not g:
+        abort(404)
+    return render_template(
+        'game.html', expansions = list(get_game_names(g['name'])), game = g,
+        **_get_template_variables()
+    )
+
 @app.route('/random')
 @_auth.oidc_auth('default')
 def random():
     return render_template(
         'index.html', games = get_random_games(request.args, 1),
         **_get_template_variables()
-    )
-
-@app.route('/rules/<game_name>')
-@_auth.oidc_auth('default')
-def rules(game_name):
-    game = get_game(game_name)
-    if not game:
-        abort(404)
-    return render_template(
-        'rules.html', game = game, **_get_template_variables()
     )
 
 @app.route('/submissions')

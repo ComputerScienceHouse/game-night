@@ -8,19 +8,16 @@
     {% for game in row %}
     <div class="col-12 col-lg-3 col-md-6 col-sm-6 my-3">
         <div class="card">
-            <a href="{{game.link}}">
+            <a href="/game/{{game.name}}">
                 <img alt="{{game.name}}" class="card-img-top" src="{{s3_url}}/{{game.name}}.jpg" title="{{game.name}}">
             </a>
             <div class="card-body">
                 <h4 class="card-title">
-                    <a href="{{game.link}}">{{game.name}}</a>
+                    <a href="/game/{{game.name}}">{{game.name}}</a>
                     {% if game.new %}
                     <span class="badge badge-success">New</span>
                     {% endif %}
                 </h4>
-                {% if game.rules %}
-                <p class="card-text"><a href="/rules/{{game.name}}">House Rules</a></p>
-                {% endif %}
                 {% if game.max_players == game.min_players %}
                 <p class="card-text">Players: {{game.max_players}}</p>
                 {% else %}
@@ -30,7 +27,7 @@
             <div class="card-footer">
                 <p class="card-text">
                     {% if game.owner == 'CSH' %}
-                    Owner: CSH
+                    Owner: <strong>CSH</strong>
                     {% else %}
                     Owner: <a href="https://profiles.csh.rit.edu/user/{{game.owner}}">{{game.owner}}</a>
                     {% endif %}
