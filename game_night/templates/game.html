@@ -70,4 +70,13 @@
         </div>
     </div>
 </div>
+{% if gamemaster or game.submitter == session['userinfo']['preferred_username'] %}
+<div class="row text-center">
+    <div class="col col-12">
+        <form action="/delete/{{game.name}}" method="POST">
+            <button class="btn btn-danger" type="submit">Delete</button>
+        </form>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

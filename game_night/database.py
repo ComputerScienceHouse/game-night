@@ -14,6 +14,7 @@ try:
 except:
     _database = MongoClient()[environ['MONGODB_DATABASE']]
 _api_keys = _database.api_keys
+_deleted = _database.deleted
 _gamemasters = _database.gamemasters
 _games = _database.games
 
@@ -70,9 +71,12 @@ def _create_sort(arguments, **kwargs):
     except:
         return kwargs
 
-def delete_game(name):
-    if not _games.delete_one({'name': name}).deleted_count:
+def delete_game(name, submitter):
+    game = _games.find_one({'name': name})
+    if not game or (not is_gamemaster(submitter) and submitter != game['submitter']):
         return False
+    _deleted.insert_one(game)
+    _games.delete_one({'name': name})
     try:
         id = list(_games.find().sort([('_id', -1)]).limit(10))[-1]['_id']
         _games.update_many({'_id': {'$gte': id}}, {'$set': {'new': True}})

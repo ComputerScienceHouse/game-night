@@ -76,13 +76,11 @@ def api_random(sample_size = 1):
 def api_submitters():
     return jsonify(list(get_submitters(request.args)))
 
-@app.route('/delete/<game_name>', methods = ['GET', 'POST'])
+@app.route('/delete/<game_name>', methods = ['POST'])
 @_auth.oidc_auth('default')
-@require_gamemaster
 def delete(game_name):
-    if not delete_game(game_name):
+    if not delete_game(game_name, session['userinfo']['preferred_username']):
         abort(404)
-    _s3.delete_object(Bucket = environ['S3_BUCKET'], Key = game_name + '.jpg')
     return redirect('/')
 
 def _get_template_variables():
