@@ -148,11 +148,10 @@ def get_submissions(arguments, submitter):
         {'$project': {'_id': False}}
     ])
 
-def get_submitters(arguments):
-    aggregation = [
-        {'$match': _create_filters(arguments)}, {'$group': {'_id': '$owner'}},
-        {'$sort': {'_id': 1}},
-    ]
+def get_submitters(arguments = None):
+    aggregation = [{'$group': {'_id': '$submitter'}}, {'$sort': {'_id': 1}}]
+    if arguments:
+        aggregation = {'$match': _create_filters(arguments)} + aggregation
     return (game['_id'] for game in _games.aggregate(aggregation))
 
 def insert_game(game, submitter):

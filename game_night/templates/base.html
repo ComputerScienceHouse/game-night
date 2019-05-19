@@ -41,6 +41,15 @@
                                             {% endfor %}
                                         </select>
                                     </div>
+                                    <div class="form-group">
+                                        <label class="mx-auto">Submitter:</label>
+                                        <select class="form-control mx-auto" name="submitter">
+                                            <option value="">Any</option>
+                                            {% for submitter in submitters %}
+                                            <option{% if request.args.get('submitter', '') == submitter %} selected{% endif %} value="{{submitter}}">{{submitter}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                     {% if players %}
                                     <div class="form-group">
                                         <label class="mx-auto"># of players:</label>

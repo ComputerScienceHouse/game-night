@@ -87,7 +87,8 @@ def _get_template_variables():
     return {
         'gamemaster': is_gamemaster(session['userinfo']['preferred_username']),
         'owners': get_owners(), 'players': get_players(),
-        's3_url': f'{environ["S3_ENDPOINT"]}/{environ["S3_BUCKET"]}'
+        's3_url': f'{environ["S3_ENDPOINT"]}/{environ["S3_BUCKET"]}',
+        'submitters': get_submitters()
     }
 
 @app.route('/')
