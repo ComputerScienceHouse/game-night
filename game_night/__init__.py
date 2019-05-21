@@ -153,4 +153,5 @@ def submit():
         }
     )
     insert_game(game, session['userinfo']['preferred_username'])
+    flash('Game successfully submitted.')
     return redirect('/')
