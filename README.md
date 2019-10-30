@@ -1,12 +1,12 @@
 # Game-Night
 
-Game-Night is a web-app used to archive boardgames used by members of the Computer Science House. Game-Night is currently running [Here] (http://game-night.csh.rit.edu)
+Game-Night is a web-app used to archive boardgames used by members of the Computer Science House. Game-Night is currently running [Here](http://game-night.csh.rit.edu)
 
 ## Setup
 **Requires Python & MongoDB**
 
 ### Python Dependencies
-Use `pip install -r requirements.txt` to install the required python dependencies. Using virtualenv is recommeded when install packages for python.
+Use `pip install -r requirements.txt` to install the required python dependencies. Using virtualenv is recommeded when installing packages for python.
 
 ### Environment Variables
 Game-Night requires access to OIDC and s3 to operate properly. This is done by obtaining a client id and secret for each service.
