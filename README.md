@@ -3,8 +3,7 @@
 Game-Night is a web-app used to archive boardgames used by members of the Computer Science House. Game-Night is currently running [Here] (http://game-night.csh.rit.edu)
 
 ## Setup
-**Requires Python**  
-**Requires MongoDB**
+**Requires Python & MongoDB**
 
 ### Python Dependencies
 Use `pip install -r requirements.txt` to install the required python dependencies. Using virtualenv is recommeded when install packages for python.
@@ -30,7 +29,7 @@ For s3 credentials contact a maintainer of Game-Night
 * `S3_SECRET`
 * `S3_ENDPOINT`
 
-### Running Game-Night
+## Running Game-Night
 Start Game-Night by using `python wsgi.py` in the projects root directory
 
 The project should be running at localhost:5000
