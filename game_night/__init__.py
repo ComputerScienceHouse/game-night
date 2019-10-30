@@ -143,7 +143,7 @@ def submit():
         return render_template(
             'submit.html',
             error = next(iter(game.errors.values()))[0], form = game,
-            game_names = get_game_names(), **()
+            game_names = get_game_names(), **_get_template_variables()
         )
     game = game.data
     game = {k: v.strip() if type(v) == str else v for k,v in game.items()}
