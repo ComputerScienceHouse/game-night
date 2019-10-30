@@ -1,6 +1,6 @@
 # Game-Night
 
-Game-Night is a web-app used to archive boardgames used by members of the Computer Science House. Game-Night is currently running [Here](http://game-night.csh.rit.edu)
+Game-Night is a web-app used to archive boardgames used by members of the Computer Science House. Game-Night is currently running [Here](https://game-night.csh.rit.edu)
 
 ## Setup
 **Requires Python & MongoDB**
