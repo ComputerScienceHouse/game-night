@@ -146,6 +146,7 @@ def submit():
             game_names = get_game_names(), **_get_template_variables()
         )
     game = game.data
+    game = {k: v.strip() if type(v) == str else v for k,v in game.items()}
     _s3.upload_fileobj(
         game['image'], environ['S3_BUCKET'], game['name'] + '.jpg',
         ExtraArgs = {
