@@ -46,3 +46,8 @@ class Game(FlaskForm):
         if not FlaskForm.validate(self):
             return False
         return True
+
+class EditGame(Game):
+    image = FileField('image', validators = [FileAllowed(['jpg'])])
+
+    name = StringField('name', validators = [DataRequired()])

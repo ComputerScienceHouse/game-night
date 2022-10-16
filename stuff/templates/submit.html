@@ -13,19 +13,31 @@
                 <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Image: </label>
                     <div class="col-md-10 col-sm-12">
+                        {% if item is defined %}
+                        <input accept="image/jpeg" class="form-control" name="image" type="file">
+                        {% else %}
                         <input accept="image/jpeg" class="form-control" name="image" required type="file">
+                        {% endif %}
                     </div>
                 </div>
                 <div class="form-group row">
                     <label class="col-form-label col-md-5 col-sm-12">Link (wiki, docs, etc.): </label>
                     <div class="col-md-7 col-sm-12">
+                        {% if item is defined and item['link'] %} 
+                        <input class="form-control" name="link" required value="{{item['link']}}">
+                        {% else %}
                         <input class="form-control" name="link" required value="{{form.link.data}}">
+                        {% endif %}
                     </div>
                 </div>
                 <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Name: </label>
                     <div class="col-md-10 col-sm-12">
+                        {% if item is defined and item['name'] %} 
+                        <input class="form-control" name="name" required value="{{item['name']}}">
+                        {% else %}
                         <input class="form-control" name="name" required value="{{form.name.data}}">
+                        {% endif %}
                     </div>
                 </div>
                 <div class="form-group row">
@@ -33,6 +45,8 @@
                     <div class="col-md-10 col-sm-12">
                         {% if quartermaster %}
                         <input class="form-control" name="owner" required type="text" value="{{form.owner.data}}">
+                        {% elif item is defined and item['owner'] %}
+                        <input class="form-control" name="owner" required type="text" value="{{item['owner']}}">
                         {% else %}
                         <select class="form-control" name="owner" required>
                             <option {% if form.owner.data == session['userinfo']['preferred_username'] %}selected {% endif %}value="{{session['userinfo']['preferred_username']}}">{{session['userinfo']['preferred_username']}}</option>
@@ -43,7 +57,11 @@
                 </div>
                 <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Info: </label>
+                    {% if item is defined and item['info'] %} 
+                    <textarea class="form-control" name="info" rows="5" required value="">{{item['info']}}</textarea>
+                    {% else %}
                     <textarea class="form-control" name="info" rows="5" required value="{{form.info.data}}"></textarea>
+                    {% endif %}
                 </div>
                 <input class="form-control" type="submit" value="Submit">
             </div>

@@ -6,7 +6,7 @@ from flask_pyoidc.flask_pyoidc import OIDCAuthentication
 from boto3 import client
 from stuff.auth import requirequartermaster, require_read_key
 from stuff.database import *
-from stuff.game import Game
+from stuff.game import Game, EditGame
 
 app = Flask(__name__)
 app.config.update(
@@ -156,5 +156,39 @@ def submit():
         }
     )
     insert_game(game, session['userinfo']['preferred_username'])
+    flash('Game successfully submitted.')
+    return redirect('/')
+
+@app.route('/edit/<item_name>', methods = ['GET', 'POST'])
+@_auth.oidc_auth('default')
+def edit(item_name):
+    if request.method == 'GET':
+        print('chom!!!')
+        return render_template(
+            'submit.html',
+            form = Game(session['userinfo']['preferred_username']),
+            game_names = get_game_names(), **_get_template_variables(),
+            item = get_game(item_name)
+        )
+    game = EditGame()
+    if not game.validate():
+        return render_template(
+            'submit.html',
+            error = next(iter(game.errors.values()))[0],
+            form = game,
+            game_names = get_game_names(), 
+            **_get_template_variables(),
+            item = get_game(item_name)
+        )
+    game = game.data
+    game = {k: v.strip() if type(v) == str and k != 'info' else v for k,v in game.items()}
+    if game['image']:
+        _s3.upload_fileobj(
+            game['image'], environ['S3_BUCKET'], game['name'] + '.jpg',
+            ExtraArgs = {
+                'ACL': 'public-read', 'ContentType': game['image'].content_type
+            }
+        )
+    insert_game(game, session['userinfo']['preferred_username'], update = True)
     flash('Game successfully submitted.')
     return redirect('/')

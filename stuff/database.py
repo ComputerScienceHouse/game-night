@@ -1,5 +1,5 @@
 from re import compile, escape, I
-from pymongo import InsertOne, MongoClient, UpdateOne
+from pymongo import InsertOne, ReplaceOne, MongoClient, UpdateOne
 from os import environ
 from uuid import uuid4
 from functools import wraps
@@ -154,12 +154,15 @@ def get_submitters(arguments = None):
         aggregation = {'$match': _create_filters(arguments)} + aggregation
     return (game['_id'] for game in _items.aggregate(aggregation))
 
-def insert_game(game, submitter):
+def insert_game(game, submitter, update = False):
     del game['image']
     game['new'] = True
     game['sort_name'] = _sub_regex.sub('', game['name'])
     game['submitter'] = submitter
-    requests = [InsertOne(game)]
+    if update:
+        requests = [ReplaceOne({"name" : game['name']},  game)]
+    else:
+        requests = [InsertOne(game)]
     games = list(_items.find().sort([('_id', -1)]).limit(10))
     if len(games) == 10:
         requests.append(UpdateOne({'_id': games[-1]['_id']}, {
