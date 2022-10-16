@@ -19,7 +19,7 @@ _quartermasters = _database.quartermasters
 _items = _database.items
 
 def api_key_exists(key):
-    return _api_keys.count({'key': key})
+    return _api_keys.count_documents({'key': key})
 
 def _create_filters(arguments, **kwargs):
     filters = {}
@@ -85,7 +85,7 @@ def delete_game(name, submitter):
     return True
 
 def game_exists(name):
-    return _items.count({'name': compile(f'^{escape(name)}$', I)})
+    return _items.count_documents({'name': compile(f'^{escape(name)}$', I)})
 
 def generate_api_key():
     uuid = str(uuid4())
@@ -96,7 +96,7 @@ def get_api_keys():
     return _api_keys.find()
 
 def get_count(arguments):
-    return _items.count(_create_filters(arguments))
+    return _items.count_documents(_create_filters(arguments))
 
 def get_game(name):
     return _items.find_one({'name': name})

@@ -32,9 +32,7 @@ class Game(FlaskForm):
     image = FileField('image', validators = [
         FileRequired(), FileAllowed(['jpg'])
     ])
-    link = StringField('link', validators = [
-        DataRequired(), Regexp('https://boardgamegeek.com/.*'), _validate_link
-    ])
+    link = StringField('link')
     max_players = IntegerField('max_players', validators = [DataRequired()])
     min_players = IntegerField('min_players', validators = [DataRequired()])
     name = StringField('name', validators = [DataRequired(), _validate_name])
