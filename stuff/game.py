@@ -5,11 +5,6 @@ from flask_wtf.file import FileAllowed, FileField, FileRequired
 from wtforms import IntegerField, StringField
 from urllib.request import urlopen
 
-def _validate_expansion(form, field):
-    from stuff.database import game_exists
-    if field.data and not game_exists(field.data):
-        raise ValidationError(f'"{field.data}" is not an expansion')
-
 def _validate_link(form, field):
     try:
         urlopen(field.data)
@@ -28,19 +23,17 @@ def _validate_owner(form, field):
 
 class Game(FlaskForm):
 
-    expansion = StringField('expansion', validators = [_validate_expansion])
     image = FileField('image', validators = [
         FileRequired(), FileAllowed(['jpg'])
     ])
-    link = StringField('link')
+    link = StringField('link', validators = [DataRequired()])
     name = StringField('name', validators = [DataRequired(), _validate_name])
     owner = StringField('owner', validators = [DataRequired(), _validate_owner])
-    info = StringField('info')
+    info = StringField('info', validators = [DataRequired()])
 
     def __init__(self, submitter = None):
         if submitter:
             super().__init__(
-                expansion = '',
                 link = '', 
                 info = '',
                 name = '',

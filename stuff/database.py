@@ -155,8 +155,6 @@ def get_submitters(arguments = None):
     return (game['_id'] for game in _items.aggregate(aggregation))
 
 def insert_game(game, submitter):
-    if not game['expansion']:
-        del game['expansion']
     del game['image']
     game['new'] = True
     game['sort_name'] = _sub_regex.sub('', game['name'])

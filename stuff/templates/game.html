@@ -15,28 +15,9 @@
                     {% endif %}
                 </h1>
                 <hr>
-                {% if game.expansion %}
-                <h2 class="card-text">Expansion of: <a href="/game/{{game.expansion}}">{{game.expansion}}</a></h2>
-                {% endif %}
-                {% if expansions %}
-                <h2 class="card-text">
-                    Expansion(s): 
-                    {% for expansion in expansions %}
-                    <a href="/game/{{expansion}}">{{expansion}}</a>{{', ' if not loop.last}}
-                    {% endfor %}
-                </h2>
-                {% endif %}
-                {% if game.max_players == game.min_players %}
-                <h2 class="card-text">Players: {{game.max_players}}</h2>
-                {% else %}
-                <h2 class="card-text">Players: {{game.min_players}} - {{game.max_players}}</h2>
-                {% endif %}
-                {% if game.rules %}
-                <hr>
+                {% if game.info %}
                 <h2>Info</h2>
-                <hr>
-                <h2>House Rules</h2>
-                {{game.rules.markdown|markdown}}
+                <p>{{game.info}}</p>
                 {% endif %}
             </div>
             <div class="card-footer">
