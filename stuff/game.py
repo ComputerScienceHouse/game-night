@@ -33,24 +33,23 @@ class Game(FlaskForm):
         FileRequired(), FileAllowed(['jpg'])
     ])
     link = StringField('link')
-    max_players = IntegerField('max_players', validators = [DataRequired()])
-    min_players = IntegerField('min_players', validators = [DataRequired()])
     name = StringField('name', validators = [DataRequired(), _validate_name])
     owner = StringField('owner', validators = [DataRequired(), _validate_owner])
+    info = StringField('info')
 
     def __init__(self, submitter = None):
         if submitter:
             super().__init__(
-                expansion = '', link = '', max_players = 1, min_players = 1,
-                name = '', owner = submitter
+                expansion = '',
+                link = '', 
+                info = '',
+                name = '',
+                owner = submitter
             )
         else:
             super().__init__()
 
     def validate(self):
         if not FlaskForm.validate(self):
-            return False
-        if self.max_players.data < self.min_players.data:
-            self.max_players.errors.append('Max players < min players')
             return False
         return True
