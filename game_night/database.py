@@ -170,4 +170,4 @@ def insert_game(game, submitter):
     _games.bulk_write(requests)
 
 def is_gamemaster(username):
-    return _gamemasters.count({'username': username})
+    return _gamemasters.count_documents({'username': username})

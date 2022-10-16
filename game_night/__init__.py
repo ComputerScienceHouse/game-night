@@ -11,7 +11,8 @@ from game_night.game import Game
 app = Flask(__name__)
 app.config.update(
     PREFERRED_URL_SCHEME = environ.get('URL_SCHEME', 'https'),
-    SECRET_KEY = environ['SECRET_KEY'], SERVER_NAME = environ['SERVER_NAME'],
+    SECRET_KEY = environ['SECRET_KEY'],
+    SERVER_NAME = environ['SERVER_NAME'],
     WTF_CSRF_ENABLED = False
 )
 app.jinja_env.lstrip_blocks = True
