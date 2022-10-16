@@ -9,4 +9,5 @@ RUN pip3 install -r requirements.txt
 COPY ./stuff ./stuff
 COPY ./*.py .
 
-ENTRYPOINT ["python3", "wsgi.py"]
+#ENTRYPOINT ["python3", "wsgi.py"]
+ENTRYPOINT gunicorn stuff:app --bind=0.0.0.0:8080
