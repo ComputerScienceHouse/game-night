@@ -6,7 +6,7 @@ from wtforms import IntegerField, StringField
 from urllib.request import urlopen
 
 def _validate_expansion(form, field):
-    from game_night.database import game_exists
+    from stuff.database import game_exists
     if field.data and not game_exists(field.data):
         raise ValidationError(f'"{field.data}" is not an expansion')
 
@@ -17,12 +17,12 @@ def _validate_link(form, field):
         raise ValidationError('URL is unreachable')
 
 def _validate_name(form, field):
-    from game_night.database import game_exists
+    from stuff.database import game_exists
     if game_exists(field.data):
         raise ValidationError(f'"{field.data}" already exists')
 
 def _validate_owner(form, field):
-    from game_night.database import is_quartermaster
+    from stuff.database import is_quartermaster
     if not is_quartermaster(session['userinfo']['preferred_username']) and field.data not in ['CSH', session['userinfo']['preferred_username']]:
         raise ValidationError('Only quartermasters can enter any owner')
 

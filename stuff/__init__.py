@@ -4,9 +4,9 @@ from flaskext.markdown import Markdown
 from flask_pyoidc.provider_configuration import *
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
 from boto3 import client
-from game_night.auth import requirequartermaster, require_read_key
-from game_night.database import *
-from game_night.game import Game
+from stuff.auth import requirequartermaster, require_read_key
+from stuff.database import *
+from stuff.game import Game
 
 app = Flask(__name__)
 app.config.update(
