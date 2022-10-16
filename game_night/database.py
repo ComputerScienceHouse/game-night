@@ -15,8 +15,8 @@ except:
     _database = MongoClient()[environ['MONGODB_DATABASE']]
 _api_keys = _database.api_keys
 _deleted = _database.deleted
-_gamemasters = _database.gamemasters
-_games = _database.games
+_quartermasters = _database.quartermasters
+_items = _database.items
 
 def api_key_exists(key):
     return _api_keys.count({'key': key})
@@ -72,20 +72,20 @@ def _create_sort(arguments, **kwargs):
         return kwargs
 
 def delete_game(name, submitter):
-    game = _games.find_one({'name': name})
-    if not game or (not is_gamemaster(submitter) and submitter != game['submitter']):
+    game = _items.find_one({'name': name})
+    if not game or (not is_quartermaster(submitter) and submitter != game['submitter']):
         return False
     _deleted.insert_one(game)
-    _games.delete_one({'name': name})
+    _items.delete_one({'name': name})
     try:
-        id = list(_games.find().sort([('_id', -1)]).limit(10))[-1]['_id']
-        _games.update_many({'_id': {'$gte': id}}, {'$set': {'new': True}})
+        id = list(_items.find().sort([('_id', -1)]).limit(10))[-1]['_id']
+        _items.update_many({'_id': {'$gte': id}}, {'$set': {'new': True}})
     except:
         pass
     return True
 
 def game_exists(name):
-    return _games.count({'name': compile(f'^{escape(name)}$', I)})
+    return _items.count({'name': compile(f'^{escape(name)}$', I)})
 
 def generate_api_key():
     uuid = str(uuid4())
@@ -96,26 +96,26 @@ def get_api_keys():
     return _api_keys.find()
 
 def get_count(arguments):
-    return _games.count(_create_filters(arguments))
+    return _items.count(_create_filters(arguments))
 
 def get_game(name):
-    return _games.find_one({'name': name})
+    return _items.find_one({'name': name})
 
 def get_game_names(expansion = None):
-    return (game['name'] for game in _games.find(
+    return (game['name'] for game in _items.find(
         {'expansion': expansion} if expansion else {},
         {'_id': False, 'name': True}
     ).sort([('sort_name', 1)]))
 
-def get_games(arguments):
-    return _games.aggregate([
+def get_items(arguments):
+    return _items.aggregate([
         {'$match': _create_filters(arguments)},
         {'$sort': _create_sort(arguments, sort_name = 1)},
         {'$project': {'_id': False}}
     ])
 
-def get_newest_games(arguments):
-    return _games.aggregate([
+def get_newest_items(arguments):
+    return _items.aggregate([
         {'$match': _create_filters(arguments, new = True)},
         {'$sort': _create_sort(arguments, _id = -1)},
         {'$project': {'_id': False}}
@@ -125,24 +125,24 @@ def get_owners(arguments = None):
     aggregation = [{'$group': {'_id': '$owner'}}, {'$sort': {'_id': 1}}]
     if arguments:
         aggregation = {'$match': _create_filters(arguments)} + aggregation
-    return (game['_id'] for game in _games.aggregate(aggregation))
+    return (game['_id'] for game in _items.aggregate(aggregation))
 
 def get_players():
     try:
-        return next(_games.aggregate([
+        return next(_items.aggregate([
             {'$group': {'_id': False, 'max': {'$max': '$max_players'}, 'min': {'$min': '$min_players'}}}
         ]))
     except:
         return None
 
-def get_random_games(arguments, sample_size):
-    return _games.aggregate([
+def get_random_items(arguments, sample_size):
+    return _items.aggregate([
         {'$match': _create_filters(arguments)},
         {'$sample': {'size': sample_size}}, {'$project': {'_id': False}}
     ])
 
 def get_submissions(arguments, submitter):
-    return _games.aggregate([
+    return _items.aggregate([
         {'$match': _create_filters(arguments, submitter = submitter)},
         {'$sort': _create_sort(arguments, sort_name = 1)},
         {'$project': {'_id': False}}
@@ -152,7 +152,7 @@ def get_submitters(arguments = None):
     aggregation = [{'$group': {'_id': '$submitter'}}, {'$sort': {'_id': 1}}]
     if arguments:
         aggregation = {'$match': _create_filters(arguments)} + aggregation
-    return (game['_id'] for game in _games.aggregate(aggregation))
+    return (game['_id'] for game in _items.aggregate(aggregation))
 
 def insert_game(game, submitter):
     if not game['expansion']:
@@ -162,12 +162,12 @@ def insert_game(game, submitter):
     game['sort_name'] = _sub_regex.sub('', game['name'])
     game['submitter'] = submitter
     requests = [InsertOne(game)]
-    games = list(_games.find().sort([('_id', -1)]).limit(10))
+    games = list(_items.find().sort([('_id', -1)]).limit(10))
     if len(games) == 10:
         requests.append(UpdateOne({'_id': games[-1]['_id']}, {
             '$unset': {'new': 1}
         }))
-    _games.bulk_write(requests)
+    _items.bulk_write(requests)
 
-def is_gamemaster(username):
-    return _gamemasters.count_documents({'username': username})
+def is_quartermaster(username):
+    return _quartermasters.count_documents({'username': username})

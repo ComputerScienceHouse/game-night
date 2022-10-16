@@ -1,11 +1,11 @@
 from functools import wraps
 from flask import abort, request, session
 
-def require_gamemaster(function):
+def requirequartermaster(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
-        from game_night import is_gamemaster
-        if not is_gamemaster(session['userinfo']['preferred_username']):
+        from game_night import is_quartermaster
+        if not is_quartermaster(session['userinfo']['preferred_username']):
             abort(403)
         return function(*args, **kwargs)
     return wrapper

@@ -22,9 +22,9 @@ def _validate_name(form, field):
         raise ValidationError(f'"{field.data}" already exists')
 
 def _validate_owner(form, field):
-    from game_night.database import is_gamemaster
-    if not is_gamemaster(session['userinfo']['preferred_username']) and field.data not in ['CSH', session['userinfo']['preferred_username']]:
-        raise ValidationError('Only gamemasters can enter any owner')
+    from game_night.database import is_quartermaster
+    if not is_quartermaster(session['userinfo']['preferred_username']) and field.data not in ['CSH', session['userinfo']['preferred_username']]:
+        raise ValidationError('Only quartermasters can enter any owner')
 
 class Game(FlaskForm):
 
