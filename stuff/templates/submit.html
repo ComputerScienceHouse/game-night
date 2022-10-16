@@ -11,26 +11,15 @@
                 </div>
                 {% endif %}
                 <div class="form-group row">
-                    <label class="col-form-label col-md-3 col-sm-12">Expansion: </label>
-                    <div class="col-md-9 col-sm-12">
-                        <select class="form-control" name="expansion">
-                            <option {% if not form.expansion.data %}selected {% endif %}value="">None</option>
-                            {% for name in game_names %}
-                            <option {% if form.expansion.data == name %}selected {% endif %}value="{{name}}">{{name}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Image: </label>
                     <div class="col-md-10 col-sm-12">
                         <input accept="image/jpeg" class="form-control" name="image" required type="file">
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label class="col-form-label col-md-5 col-sm-12">BoardGameGeek Link: </label>
+                    <label class="col-form-label col-md-5 col-sm-12">Link (wiki, docs, etc.): </label>
                     <div class="col-md-7 col-sm-12">
-                        <input class="form-control" name="link" pattern="https://boardgamegeek.com/.*" required value="{{form.link.data}}">
+                        <input class="form-control" name="link" required value="{{form.link.data}}">
                     </div>
                 </div>
                 <div class="form-group row">
@@ -42,7 +31,7 @@
                 <div class="form-group row">
                     <label class="col-form-label col-md-2 col-sm-12">Owner: </label>
                     <div class="col-md-10 col-sm-12">
-                        {% if gamemaster %}
+                        {% if quartermaster %}
                         <input class="form-control" name="owner" required type="text" value="{{form.owner.data}}">
                         {% else %}
                         <select class="form-control" name="owner" required>
@@ -53,13 +42,8 @@
                     </div>
                 </div>
                 <div class="form-group row">
-                    <label class="col-form-label col-md-6 col-sm-12">Players (Min/Max): </label>
-                    <div class="col-md-3 col-sm-6">
-                        <input class="form-control" min="1" name="min_players" required type="number" value="{{form.min_players.data}}">
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <input class="form-control" min="1" name="max_players" required type="number" value="{{form.max_players.data}}">
-                    </div>
+                    <label class="col-form-label col-md-2 col-sm-12">Info: </label>
+                    <textarea class="form-control" name="info" rows="5" required value="{{form.info.data}}"></textarea>
                 </div>
                 <input class="form-control" type="submit" value="Submit">
             </div>

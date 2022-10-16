@@ -4,9 +4,9 @@ from flaskext.markdown import Markdown
 from flask_pyoidc.provider_configuration import *
 from flask_pyoidc.flask_pyoidc import OIDCAuthentication
 from boto3 import client
-from game_night.auth import require_gamemaster, require_read_key
-from game_night.database import *
-from game_night.game import Game
+from stuff.auth import requirequartermaster, require_read_key
+from stuff.database import *
+from stuff.game import Game
 
 app = Flask(__name__)
 app.config.update(
@@ -20,7 +20,6 @@ app.jinja_env.trim_blocks = True
 app.url_map.strict_slashes = False
 
 Markdown(app)
-
 _config = ProviderConfiguration(
     environ['OIDC_ISSUER'],
     client_metadata = ClientMetadata(
@@ -38,7 +37,7 @@ _s3 = client(
 @app.route('/api')
 @require_read_key
 def api():
-    return jsonify(list(get_games(request.args)))
+    return jsonify(list(get_items(request.args)))
 
 @app.route('/api/count')
 @require_read_key
@@ -46,19 +45,19 @@ def api_count():
     return jsonify(get_count(request.args))
 
 @app.route('/api/key', methods = ['GET', 'POST'])
-@require_gamemaster
+@requirequartermaster
 def api_key():
     return jsonify(generate_api_key())
 
 @app.route('/api/keys')
-@require_gamemaster
+@requirequartermaster
 def api_keys():
     return jsonify(list(get_api_keys()))
 
 @app.route('/api/newest')
 @require_read_key
 def api_newest():
-    return jsonify(list(get_newest_games(request.args)))
+    return jsonify(list(get_newest_items(request.args)))
 
 @app.route('/api/owners')
 @require_read_key
@@ -69,7 +68,7 @@ def api_owners():
 @app.route('/api/random/<int:sample_size>')
 @require_read_key
 def api_random(sample_size = 1):
-    sample = list(get_random_games(request.args, sample_size))
+    sample = list(get_random_items(request.args, sample_size))
     return jsonify(sample[0] if len(sample) == 1 else sample)
 
 @app.route('/api/submitters')
@@ -86,7 +85,7 @@ def delete(game_name):
 
 def _get_template_variables():
     return {
-        'gamemaster': is_gamemaster(session['userinfo']['preferred_username']),
+        'quartermaster': is_quartermaster(session['userinfo']['preferred_username']),
         'image_url': environ['IMAGE_URL'],
         'owners': get_owners(), 'players': get_players(),
         'submitters': get_submitters()
@@ -96,7 +95,7 @@ def _get_template_variables():
 @_auth.oidc_auth('default')
 def index():
     return render_template(
-        'index.html', games = get_games(request.args),
+        'index.html', games = get_items(request.args),
         **_get_template_variables()
     )
 
@@ -115,7 +114,7 @@ def game(game_name):
 @_auth.oidc_auth('default')
 def random():
     return render_template(
-        'index.html', games = get_random_games(request.args, 1),
+        'index.html', games = get_random_items(request.args, 1),
         **_get_template_variables()
     )
 
@@ -147,7 +146,9 @@ def submit():
             game_names = get_game_names(), **_get_template_variables()
         )
     game = game.data
+    raw_info = game['info']
     game = {k: v.strip() if type(v) == str else v for k,v in game.items()}
+    game['info'] = raw_info
     _s3.upload_fileobj(
         game['image'], environ['S3_BUCKET'], game['name'] + '.jpg',
         ExtraArgs = {
